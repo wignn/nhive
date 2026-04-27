@@ -1,0 +1,66 @@
+# General
+/.env
+.env.*
+.env.local
+*.log
+logs/
+tmp/
+build/
+dist/
+.DS_Store
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Rust
+/target/
+**/target/
+Cargo.lock
+
+# Go
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+vendor/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Docker
+docker-compose.override.yml
+docker-compose.*.yml
+/.docker
+
+# IDEs and editors
+.vscode/
+.idea/
+*.iml
+
+# Generated files
+*.pb.rs
+*.proto.rs
+
+# Database
+*.sqlite3
+*.db
+postgres-data/
+
+# Coverage
+coverage/
+coverage.out
+
+# Mac
+.DS_Store
+
+# Misc
+.cache/
+.parcel-cache/
+dist/

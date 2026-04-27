@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package library.v1;
+
+option go_package = "github.com/novelhive/proto/library/v1;libraryv1";
+
+service LibraryService {
+  rpc GetLibrary(GetLibraryRequest) returns (GetLibraryResponse);
+  rpc AddToLibrary(AddToLibraryRequest) returns (LibraryEntry);
+  rpc UpdateStatus(UpdateStatusRequest) returns (LibraryEntry);
+  rpc RemoveFromLibrary(RemoveFromLibraryRequest) returns (RemoveResponse);
+  rpc GetBookmarks(GetBookmarksRequest) returns (GetBookmarksResponse);
+  rpc AddBookmark(AddBookmarkRequest) returns (Bookmark);
+  rpc RemoveBookmark(RemoveBookmarkRequest) returns (RemoveResponse);
+  rpc GetProgress(GetProgressRequest) returns (ReadingProgress);
+  rpc SaveProgress(SaveProgressRequest) returns (ReadingProgress);
+}
+
+message LibraryEntry {
+  string id = 1;
+  string user_id = 2;
+  string novel_id = 3;
+  string status = 4;
+  string created_at = 5;
+}
+
+message GetLibraryRequest {
+  string user_id = 1;
+  string status = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message GetLibraryResponse {
+  repeated LibraryEntry entries = 1;
+  int32 total = 2;
+}
+
+message AddToLibraryRequest {
+  string user_id = 1;
+  string novel_id = 2;
+}
+
+message UpdateStatusRequest {
+  string user_id = 1;
+  string novel_id = 2;
+  string status = 3;
+}
+
+message RemoveFromLibraryRequest {
+  string user_id = 1;
+  string novel_id = 2;
+}
+
+message RemoveResponse {
+  bool success = 1;
+}
+
+message Bookmark {
+  string id = 1;
+  string user_id = 2;
+  string novel_id = 3;
+  string chapter_id = 4;
+  string note = 5;
+  string created_at = 6;
+}
+
+message GetBookmarksRequest {
+  string user_id = 1;
+  string novel_id = 2;
+}
+
+message GetBookmarksResponse {
+  repeated Bookmark bookmarks = 1;
+}
+
+message AddBookmarkRequest {
+  string user_id = 1;
+  string novel_id = 2;
+  string chapter_id = 3;
+  string note = 4;
+}
+
+message RemoveBookmarkRequest {
+  string bookmark_id = 1;
+  string user_id = 2;
+}
+
+message ReadingProgress {
+  string user_id = 1;
+  string novel_id = 2;
+  int32 chapter_number = 3;
+  float scroll_position = 4;
+  string updated_at = 5;
+}
+
+message GetProgressRequest {
+  string user_id = 1;
+  string novel_id = 2;
+}
+
+message SaveProgressRequest {
+  string user_id = 1;
+  string novel_id = 2;
+  int32 chapter_number = 3;
+  float scroll_position = 4;
+}

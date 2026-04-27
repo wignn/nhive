@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+package novel.v1;
+
+option go_package = "github.com/novelhive/proto/novel/v1;novelv1";
+
+service NovelService {
+  rpc GetNovel(GetNovelRequest) returns (Novel);
+  rpc ListNovels(ListNovelsRequest) returns (ListNovelsResponse);
+  rpc CreateNovel(CreateNovelRequest) returns (Novel);
+  rpc UpdateNovel(UpdateNovelRequest) returns (Novel);
+  rpc DeleteNovel(DeleteNovelRequest) returns (DeleteNovelResponse);
+  rpc GetChapter(GetChapterRequest) returns (Chapter);
+  rpc ListChapters(ListChaptersRequest) returns (ListChaptersResponse);
+  rpc CreateChapter(CreateChapterRequest) returns (Chapter);
+  rpc UpdateChapter(UpdateChapterRequest) returns (Chapter);
+  rpc ListGenres(ListGenresRequest) returns (ListGenresResponse);
+}
+
+message Novel {
+  string id = 1;
+  string title = 2;
+  string slug = 3;
+  string synopsis = 4;
+  string cover_url = 5;
+  string author = 6;
+  string status = 7;
+  int32 total_chapters = 8;
+  repeated Genre genres = 9;
+  string created_at = 10;
+  string updated_at = 11;
+}
+
+message Genre {
+  int32 id = 1;
+  string name = 2;
+  string slug = 3;
+}
+
+message Chapter {
+  string id = 1;
+  string novel_id = 2;
+  int32 number = 3;
+  string title = 4;
+  string content = 5;
+  int32 word_count = 6;
+  string created_at = 7;
+}
+
+message GetNovelRequest {
+  string slug = 1;
+}
+
+message ListNovelsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string genre_slug = 3;
+  string status = 4;
+  string sort_by = 5;
+}
+
+message ListNovelsResponse {
+  repeated Novel novels = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message CreateNovelRequest {
+  string title = 1;
+  string synopsis = 2;
+  string cover_url = 3;
+  string author = 4;
+  repeated int32 genre_ids = 5;
+}
+
+message UpdateNovelRequest {
+  string id = 1;
+  string title = 2;
+  string synopsis = 3;
+  string cover_url = 4;
+  string author = 5;
+  string status = 6;
+  repeated int32 genre_ids = 7;
+}
+
+message DeleteNovelRequest {
+  string id = 1;
+}
+
+message DeleteNovelResponse {
+  bool success = 1;
+}
+
+message GetChapterRequest {
+  string novel_slug = 1;
+  int32 chapter_number = 2;
+}
+
+message ListChaptersRequest {
+  string novel_id = 1;
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+message ListChaptersResponse {
+  repeated ChapterSummary chapters = 1;
+  int32 total = 2;
+}
+
+message ChapterSummary {
+  string id = 1;
+  int32 number = 2;
+  string title = 3;
+  int32 word_count = 4;
+  string created_at = 5;
+}
+
+message CreateChapterRequest {
+  string novel_id = 1;
+  int32 number = 2;
+  string title = 3;
+  string content = 4;
+}
+
+message UpdateChapterRequest {
+  string id = 1;
+  string title = 2;
+  string content = 3;
+}
+
+message ListGenresRequest {}
+
+message ListGenresResponse {
+  repeated Genre genres = 1;
+}

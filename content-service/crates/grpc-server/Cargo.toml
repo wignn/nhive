@@ -1,0 +1,23 @@
+[package]
+name = "content-grpc-server"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "content-service"
+path = "src/main.rs"
+
+[dependencies]
+content-domain = { path = "../domain" }
+content-storage = { path = "../storage" }
+tokio = { workspace = true }
+tonic = { workspace = true }
+prost = { workspace = true }
+sqlx = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+tonic-reflection = "0.12"
+
+[build-dependencies]
+tonic-build = "0.12"

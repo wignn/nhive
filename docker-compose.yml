@@ -1,0 +1,214 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: novelhive-postgres
+    environment:
+      POSTGRES_DB: novelhive
+      POSTGRES_USER: novelhive
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U novelhive"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: novelhive-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: elasticsearch:8.13.0
+    container_name: novelhive-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  nats:
+    image: nats:2-alpine
+    container_name: novelhive-nats
+    command: ["--jetstream", "--store_dir=/data", "-p", "4222", "-m", "8222"]
+    ports:
+      - "4222:4222"
+      - "18223:8222"
+    volumes:
+      - natsdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8222/healthz || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    container_name: novelhive-user-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://novelhive:secret@postgres:5432/novelhive_users?sslmode=disable
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: novelhive-super-secret-key-change-in-production
+      GRPC_PORT: "50051"
+    ports:
+      - "50051:50051"
+
+  novel-service:
+    build:
+      context: .
+      dockerfile: novel-service/Dockerfile
+    container_name: novelhive-novel-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://novelhive:secret@postgres:5432/novelhive_novels?sslmode=disable
+      REDIS_URL: redis://redis:6379/1
+      NATS_URL: nats://nats:4222
+      GRPC_PORT: "50052"
+    ports:
+      - "50052:50052"
+
+  content-service:
+    build:
+      context: .
+      dockerfile: content-service/Dockerfile
+    container_name: novelhive-content-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://novelhive:secret@postgres:5432/novelhive_novels?sslmode=disable
+      REDIS_URL: redis://redis:6379/2
+      GRPC_PORT: "50053"
+    ports:
+      - "50053:50053"
+
+  search-service:
+    build:
+      context: .
+      dockerfile: search-service/Dockerfile
+    container_name: novelhive-search-service
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      REDIS_URL: redis://redis:6379/3
+      NATS_URL: nats://nats:4222
+      GRPC_PORT: "50054"
+    ports:
+      - "50054:50054"
+
+  comment-service:
+    build:
+      context: .
+      dockerfile: comment-service/Dockerfile
+    container_name: novelhive-comment-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://novelhive:secret@postgres:5432/novelhive_comments?sslmode=disable
+      REDIS_URL: redis://redis:6379/4
+      NATS_URL: nats://nats:4222
+      GRPC_PORT: "50055"
+    ports:
+      - "50055:50055"
+
+  library-service:
+    build:
+      context: .
+      dockerfile: library-service/Dockerfile
+    container_name: novelhive-library-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://novelhive:secret@postgres:5432/novelhive_library?sslmode=disable
+      REDIS_URL: redis://redis:6379/5
+      NATS_URL: nats://nats:4222
+      GRPC_PORT: "50056"
+    ports:
+      - "50056:50056"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: novelhive-gateway
+    depends_on:
+      - user-service
+      - novel-service
+      - content-service
+      - search-service
+      - comment-service
+      - library-service
+
+    env_file:
+      - ./gateway/.env
+    ports:
+      - "8080:8080"
+
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: novelhive-frontend
+  #   depends_on:
+  #     - gateway
+  #   environment:
+  #     NEXT_PUBLIC_API_URL: http://localhost:8080
+  #   ports:
+  #     - "3000:3000"
+
+volumes:
+  pgdata:
+  redisdata:
+  esdata:
+  natsdata:
