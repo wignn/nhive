@@ -183,7 +183,7 @@ jobs:
 
       - name: Scan image — Trivy
         id: trivy
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}:latest
           format: sarif
