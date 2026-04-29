@@ -35,9 +35,15 @@ jobs:
           failure-threshold: warning
           ignore: DL3008,DL3015,DL3018
 
-      - name: Validate docker compose
+      - name: Validate docker-compose / manifests
         run: |
           if [ -f docker-compose.yml ]; then
+            # Buat dummy .env untuk semua service sebelum validasi
+            for dir in */; do
+              if [ -f "${dir}Dockerfile" ] && [ ! -f "${dir}.env" ]; then
+                touch "${dir}.env"
+              fi
+            done
             docker compose config --quiet
           fi
 
