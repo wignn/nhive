@@ -38,7 +38,7 @@ services:
       - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
-      - "9200:9200"
+      - "19200:9200"
     volumes:
       - esdata:/usr/share/elasticsearch/data
     healthcheck:
@@ -52,8 +52,8 @@ services:
     container_name: novelhive-nats
     command: ["--jetstream", "--store_dir=/data", "-p", "4222", "-m", "8222"]
     ports:
-      - "4222:4222"
-      - "18223:8222"
+      - "14222:4222"
+      - "18224:8222"
     volumes:
       - natsdata:/data
     healthcheck:
