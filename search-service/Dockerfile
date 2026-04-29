@@ -11,7 +11,6 @@ RUN apt-get update && apt-get install -y \
 FROM chef AS planner
 
 COPY search-service/Cargo.toml Cargo.toml
-COPY search-service/Cargo.lock Cargo.lock
 COPY search-service/crates crates
 
 RUN cargo chef prepare --recipe-path recipe.json
