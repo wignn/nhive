@@ -2,12 +2,11 @@ FROM lukemathwalker/cargo-chef:latest-rust-1.94-bookworm AS chef
 
 WORKDIR /app
 
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-     pkg-config \
-     protobuf-compiler \
-     libssl-dev \
-     ca-certificates \
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    protobuf-compiler \
+    libssl-dev \
+    ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
  FROM chef AS planner
@@ -31,9 +30,8 @@ RUN strip target/release/content-service || true
 
 FROM debian:bookworm-slim AS runtime
 
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-     ca-certificates \
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
  && rm -rf /var/lib/apt/lists/* \
  && useradd -r -u 10001 appuser
 
