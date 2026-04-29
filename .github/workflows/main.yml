@@ -39,6 +39,12 @@ jobs:
       - name: Validate docker-compose / manifests
         run: |
           if [ -f docker-compose.yml ]; then
+            # Buat dummy .env untuk semua service sebelum validasi
+            for dir in */; do
+              if [ -f "${dir}Dockerfile" ] && [ ! -f "${dir}.env" ]; then
+                touch "${dir}.env"
+              fi
+            done
             docker compose config --quiet
           fi
 
