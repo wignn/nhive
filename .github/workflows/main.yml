@@ -38,7 +38,6 @@ jobs:
       - name: Validate docker-compose / manifests
         run: |
           if [ -f docker-compose.yml ]; then
-            # Buat dummy .env untuk semua service sebelum validasi
             for dir in */; do
               if [ -f "${dir}Dockerfile" ] && [ ! -f "${dir}.env" ]; then
                 touch "${dir}.env"
@@ -180,7 +179,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
 
       - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@v0
+        uses: aquasecurity/trivy-action@0.31.0
         with:
           image-ref: localscan:${{ matrix.image }}
           format: sarif
@@ -191,7 +190,7 @@ jobs:
 
       - name: Upload SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy.sarif
           category: trivy-${{ matrix.image }}
