@@ -2,36 +2,57 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
+	"github.com/novelhive/gateway/internal/clients"
 	"github.com/novelhive/gateway/internal/config"
 	"github.com/novelhive/gateway/internal/handler"
 	"github.com/novelhive/gateway/internal/middleware"
 	"github.com/novelhive/gateway/internal/storage"
-	"github.com/novelhive/gateway/internal/store"
+	"github.com/novelhive/pkg/logger"
+	"go.uber.org/zap"
 )
 
 func main() {
+	log := logger.New("gateway")
+	defer log.Sync()
+
 	_ = godotenv.Load("../frontend/.env")
 	_ = godotenv.Load()
 
 	cfg := config.Load()
 
+	// R2 image storage
 	r2Client, err := storage.NewR2Client(cfg)
 	if err != nil {
-		log.Printf("⚠️ R2 Storage not configured: %v", err)
+		log.Warn("R2 Storage not configured", zap.Error(err))
 	} else {
-		log.Printf("☁️ R2 Storage initialized for bucket: %s", cfg.R2BucketName)
+		log.Info("R2 Storage initialized", zap.String("bucket", cfg.R2BucketName))
 	}
 
-	// Initialize in-memory data store with sample data
-	dataStore := store.NewStore()
-	h := handler.New(dataStore, cfg.JWTSecret, r2Client)
+	// gRPC clients to all microservices
+	log.Info("connecting to microservices",
+		zap.String("user_service", cfg.UserServiceAddr),
+		zap.String("novel_service", cfg.NovelServiceAddr),
+		zap.String("comment_service", cfg.CommentServiceAddr),
+		zap.String("library_service", cfg.LibraryServiceAddr),
+	)
+	svcClients := clients.New(
+		cfg.UserServiceAddr,
+		cfg.NovelServiceAddr,
+		cfg.CommentServiceAddr,
+		cfg.LibraryServiceAddr,
+	)
+	defer svcClients.Close()
+
+	h := handler.New(svcClients, cfg.JWTSecret, r2Client)
 
 	r := chi.NewRouter()
 
@@ -41,7 +62,7 @@ func main() {
 	r.Use(chimw.RealIP)
 	r.Use(middleware.SecurityHeaders)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:5173"},
+		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:5173", "https://*.novelhive.com"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link", "X-Request-Id"},
@@ -49,17 +70,13 @@ func main() {
 		MaxAge:           300,
 	}))
 
-	// Rate limiter: 120 requests per minute per IP
-	rl := middleware.NewRateLimiter(120)
+	rl := middleware.NewRateLimiter(200)
 	r.Use(rl.Middleware)
 
-	// Routes
 	r.Route("/api/v1", func(r chi.Router) {
-		// Public auth routes
 		r.Post("/auth/register", h.Register)
 		r.Post("/auth/login", h.Login)
-
-		// Public data routes (optional auth for personalization)
+		
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.OptionalAuth(cfg.JWTSecret))
 			r.Get("/novels", h.ListNovels)
@@ -72,30 +89,27 @@ func main() {
 			r.Get("/genres", h.ListGenres)
 		})
 
-		// Protected routes (require auth)
+		// Protected routes
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 			r.Get("/auth/me", h.GetProfile)
 
-			// Comments
 			r.Post("/chapters/{chapterId}/comments", h.CreateComment)
 			r.Post("/comments/{commentId}/like", h.LikeComment)
 
-			// Library
 			r.Get("/library", h.GetLibrary)
 			r.Post("/library/{novelId}", h.AddToLibrary)
+			r.Delete("/library/{novelId}", h.RemoveFromLibrary)
 			r.Put("/library/{novelId}/status", h.UpdateLibraryStatus)
 
-			// Bookmarks
 			r.Get("/bookmarks", h.GetBookmarks)
 			r.Post("/bookmarks", h.AddBookmark)
 
-			// Progress
 			r.Get("/progress/{novelId}", h.GetProgress)
 			r.Put("/progress/{novelId}", h.SaveProgress)
 		})
 
-		// Admin routes (require auth + admin role)
+		// Admin routes
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 			r.Use(middleware.AdminOnly)
@@ -116,15 +130,28 @@ func main() {
 		})
 	})
 
-	// Health check
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status":"ok","service":"novelhive-gateway"}`))
+		w.Write([]byte(`{"status":"ok","service":"novelhive-gateway","version":"2.0"}`))
 	})
 
 	addr := fmt.Sprintf(":%s", cfg.HTTPPort)
-	log.Printf("🚀 NovelHive API Gateway listening on http://localhost%s", addr)
-	log.Printf("📚 Admin: admin@novelhive.com / Admin123!")
-	log.Printf("📖 Reader: reader@novelhive.com / Reader123!")
-	log.Fatal(http.ListenAndServe(addr, r))
+	log.Info("gateway started", zap.String("addr", "http://localhost"+addr))
+
+	// Graceful shutdown
+	srv := &http.Server{Addr: addr, Handler: r}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal("http server failed", zap.Error(err))
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Info("shutting down gateway")
+	srv.Close()
+	log.Info("gateway stopped")
 }

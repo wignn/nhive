@@ -56,7 +56,6 @@ func (r *PostgresLibraryRepo) RemoveFromLibrary(userID, novelID string) error {
 	return err
 }
 
-// Bookmark repo
 type PostgresBookmarkRepo struct{ pool *pgxpool.Pool }
 func NewPostgresBookmarkRepo(pool *pgxpool.Pool) *PostgresBookmarkRepo { return &PostgresBookmarkRepo{pool: pool} }
 

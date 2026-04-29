@@ -22,7 +22,7 @@ down:
 clean:
 	docker-compose down -v
 
-# View logs
+# View logs (structured JSON in production)
 logs:
 	docker-compose logs -f
 
@@ -67,6 +67,15 @@ build-comment:
 build-library:
 	cd library-service && go build -o bin/server cmd/server/main.go
 
+# Build all Go services
+build-go: build-gateway build-user build-novel build-comment build-library
+
+# Build all Rust services
+build-rust: build-content build-search
+
+# Build everything
+build-all: build-go build-rust
+
 # Test
 test:
 	cd gateway && go test ./...
@@ -76,3 +85,14 @@ test:
 	cd library-service && go test ./...
 	cd content-service && cargo test
 	cd search-service && cargo test
+
+# Tidy all Go modules (including shared packages)
+tidy:
+	cd pkg/logger && go mod tidy
+	cd pkg/config && go mod tidy
+	cd pkg/grpclog && go mod tidy
+	cd gateway && go mod tidy
+	cd user-service && go mod tidy
+	cd novel-service && go mod tidy
+	cd comment-service && go mod tidy
+	cd library-service && go mod tidy

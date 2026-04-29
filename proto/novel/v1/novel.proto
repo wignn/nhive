@@ -99,8 +99,8 @@ message GetChapterRequest {
 
 message ListChaptersRequest {
   string novel_id = 1;
-  int32 page = 1;
-  int32 page_size = 2;
+  int32 page = 2;
+  int32 page_size = 3;
 }
 
 message ListChaptersResponse {

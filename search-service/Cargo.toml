@@ -14,6 +14,6 @@ async-nats = "0.35"
 chrono = { version = "0.4", features = ["serde"] }
 tracing = "0.1"
 tonic-reflection = "0.12"
-tracing-subscriber = "0.3"
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 anyhow = "1"
 thiserror = "1"

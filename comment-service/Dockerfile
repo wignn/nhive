@@ -1,6 +1,8 @@
 FROM golang:1.24-alpine AS builder
 WORKDIR /app
-COPY comment-service/go.mod ./
+COPY proto/ /proto/
+COPY pkg/ /pkg/
+COPY comment-service/go.mod comment-service/go.sum* ./
 RUN go mod download
 COPY comment-service/ .
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/server cmd/server/main.go

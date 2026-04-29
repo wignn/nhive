@@ -116,6 +116,45 @@ func (uc *NovelUsecase) ListGenres() ([]domain.Genre, error) {
 	return uc.genreRepo.List()
 }
 
+func (uc *NovelUsecase) GetNovelByID(id string) (*domain.Novel, error) {
+	return uc.novelRepo.GetByID(id)
+}
+
+func (uc *NovelUsecase) UpdateNovel(novel *domain.Novel) error {
+	novel.UpdatedAt = time.Now()
+	if err := uc.novelRepo.Update(novel); err != nil {
+		return err
+	}
+	if uc.cache != nil {
+		uc.cache.InvalidateNovel(novel.Slug)
+	}
+	return nil
+}
+
+func (uc *NovelUsecase) DeleteNovel(id string) error {
+	return uc.novelRepo.Delete(id)
+}
+
+func (uc *NovelUsecase) SetGenres(novelID string, genreIDs []int) error {
+	return uc.novelRepo.SetGenres(novelID, genreIDs)
+}
+
+func (uc *NovelUsecase) UpdateChapter(id, title, content string) (*domain.Chapter, error) {
+	// Find chapter by id and update
+	ch := &domain.Chapter{ID: id}
+	if title != "" {
+		ch.Title = title
+	}
+	if content != "" {
+		ch.Content = content
+		ch.WordCount = len(strings.Fields(content))
+	}
+	if err := uc.chapterRepo.Update(ch); err != nil {
+		return nil, err
+	}
+	return ch, nil
+}
+
 func generateID() string {
 	b := make([]byte, 16)
 	rand.Read(b)

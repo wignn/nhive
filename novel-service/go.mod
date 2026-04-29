@@ -1,13 +1,17 @@
 module github.com/novelhive/novel-service
 
-go 1.22
+go 1.24
 
 require (
 	github.com/gosimple/slug v1.14.0
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/nats-io/nats.go v1.35.0
+	github.com/novelhive/pkg/grpclog v0.0.0
+	github.com/novelhive/pkg/logger v0.0.0
+	github.com/novelhive/proto v0.0.0
 	github.com/redis/go-redis/v9 v9.5.1
-	google.golang.org/grpc v1.64.0
+	go.uber.org/zap v1.27.0
+	google.golang.org/grpc v1.71.0
 )
 
 require (
@@ -20,11 +24,18 @@ require (
 	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
-	golang.org/x/crypto v0.23.0 // indirect
-	golang.org/x/net v0.25.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.20.0 // indirect
-	golang.org/x/text v0.15.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
-	google.golang.org/protobuf v1.34.1 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
+	golang.org/x/crypto v0.33.0 // indirect
+	golang.org/x/net v0.35.0 // indirect
+	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250219182151-9fdb1cabc7b2 // indirect
+	google.golang.org/protobuf v1.36.5 // indirect
+)
+
+replace (
+	github.com/novelhive/pkg/grpclog => ../pkg/grpclog
+	github.com/novelhive/pkg/logger => ../pkg/logger
+	github.com/novelhive/proto => ../proto
 )

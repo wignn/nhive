@@ -3,34 +3,81 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	grpcserver "github.com/novelhive/comment-service/internal/grpc"
+	"github.com/novelhive/comment-service/internal/repository"
+	commentv1 "github.com/novelhive/proto/comment/v1"
+	userv1 "github.com/novelhive/proto/user/v1"
+	"github.com/novelhive/pkg/grpclog"
+	"github.com/novelhive/pkg/logger"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 )
 
 func main() {
+	log := logger.New("comment-service")
+	defer log.Sync()
+
 	dbURL := getEnv("DATABASE_URL", "postgres://novelhive:secret@localhost:5432/novelhive_comments?sslmode=disable")
 	grpcPort := getEnv("GRPC_PORT", "50055")
+	userServiceAddr := getEnv("USER_SERVICE_ADDR", "localhost:50051")
 
+	log.Info("connecting to database")
 	pool, err := pgxpool.New(context.Background(), dbURL)
 	if err != nil {
-		log.Fatalf("DB connect failed: %v", err)
+		log.Fatal("failed to connect to database", zap.Error(err))
 	}
 	defer pool.Close()
+
+	log.Info("running database migrations")
 	runMigrations(pool)
+
+	// Connect to user-service for profile resolution
+	var userClient userv1.UserServiceClient
+	if conn, err := grpc.NewClient(userServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials())); err == nil {
+		userClient = userv1.NewUserServiceClient(conn)
+		log.Info("connected to user-service", zap.String("addr", userServiceAddr))
+	} else {
+		log.Warn("failed to connect to user-service (non-fatal)", zap.String("addr", userServiceAddr), zap.Error(err))
+	}
+
+	commentRepo := repository.NewPostgresCommentRepo(pool)
+	likeRepo := repository.NewPostgresLikeRepo(pool)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", grpcPort))
 	if err != nil {
-		log.Fatalf("Listen failed: %v", err)
+		log.Fatal("failed to listen", zap.String("port", grpcPort), zap.Error(err))
 	}
-	grpcServer := grpc.NewServer()
-	reflection.Register(grpcServer)
-	log.Printf("Comment Service listening on :%s", grpcPort)
-	grpcServer.Serve(lis)
+
+	grpcSrv := grpc.NewServer(
+		grpc.UnaryInterceptor(grpclog.UnaryServerInterceptor(log)),
+	)
+	commentv1.RegisterCommentServiceServer(grpcSrv, grpcserver.NewCommentServiceServer(commentRepo, likeRepo, userClient, log))
+	reflection.Register(grpcSrv)
+
+	log.Info("comment-service started", zap.String("port", grpcPort))
+
+	// Graceful shutdown
+	go func() {
+		if err := grpcSrv.Serve(lis); err != nil {
+			log.Fatal("grpc serve failed", zap.Error(err))
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Info("shutting down comment-service")
+	grpcSrv.GracefulStop()
+	log.Info("comment-service stopped")
 }
 
 func runMigrations(pool *pgxpool.Pool) {
@@ -60,6 +107,8 @@ func runMigrations(pool *pgxpool.Pool) {
 }
 
 func getEnv(key, fb string) string {
-	if v := os.Getenv(key); v != "" { return v }
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
 	return fb
 }

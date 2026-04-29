@@ -5,74 +5,21 @@ import (
 
 	"github.com/novelhive/user-service/internal/domain"
 	"github.com/novelhive/user-service/internal/usecase"
+	userv1 "github.com/novelhive/proto/user/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// UserServiceServer implements the gRPC UserService.
-// Proto-generated interface is defined inline here since we're not using protoc-gen yet.
 type UserServiceServer struct {
+	userv1.UnimplementedUserServiceServer
 	uc *usecase.UserUsecase
-	UnimplementedUserServiceServer
 }
-
-// We define the gRPC server interface manually to avoid proto-gen dependency during development.
-// In production, replace with generated code from proto/user/v1/user.proto
-
-type UnimplementedUserServiceServer struct{}
 
 func NewUserServiceServer(uc *usecase.UserUsecase) *UserServiceServer {
 	return &UserServiceServer{uc: uc}
 }
 
-// RegisterRequest/Response types aligned with proto definitions
-type RegisterRequest struct {
-	Username string
-	Email    string
-	Password string
-}
-
-type RegisterResponse struct {
-	UserId string
-	Token  string
-}
-
-type LoginRequest struct {
-	Email    string
-	Password string
-}
-
-type LoginResponse struct {
-	UserId  string
-	Token   string
-	Profile *UserProfile
-}
-
-type GetProfileRequest struct {
-	UserId string
-}
-
-type ValidateTokenRequest struct {
-	Token string
-}
-
-type ValidateTokenResponse struct {
-	Valid  bool
-	UserId string
-	Role   string
-}
-
-type UserProfile struct {
-	Id        string
-	Username  string
-	Email     string
-	AvatarUrl string
-	Role      string
-	CreatedAt string
-}
-
-func (s *UserServiceServer) Register(ctx context.Context, req *RegisterRequest) (*RegisterResponse, error) {
+func (s *UserServiceServer) Register(ctx context.Context, req *userv1.RegisterRequest) (*userv1.RegisterResponse, error) {
 	user, token, err := s.uc.Register(domain.RegisterInput{
 		Username: req.Username,
 		Email:    req.Email,
@@ -81,24 +28,24 @@ func (s *UserServiceServer) Register(ctx context.Context, req *RegisterRequest) 
 	if err != nil {
 		return nil, mapDomainError(err)
 	}
-	return &RegisterResponse{
+	return &userv1.RegisterResponse{
 		UserId: user.ID,
 		Token:  token,
 	}, nil
 }
 
-func (s *UserServiceServer) Login(ctx context.Context, req *LoginRequest) (*LoginResponse, error) {
+func (s *UserServiceServer) Login(ctx context.Context, req *userv1.LoginRequest) (*userv1.LoginResponse, error) {
 	user, token, err := s.uc.Login(domain.LoginInput{
 		Email:    req.Email,
 		Password: req.Password,
 	})
 	if err != nil {
-		return nil, mapDomainError(err)
+		return nil, status.Error(codes.Unauthenticated, "invalid credentials")
 	}
-	return &LoginResponse{
+	return &userv1.LoginResponse{
 		UserId: user.ID,
 		Token:  token,
-		Profile: &UserProfile{
+		Profile: &userv1.UserProfile{
 			Id:        user.ID,
 			Username:  user.Username,
 			Email:     user.Email,
@@ -109,12 +56,12 @@ func (s *UserServiceServer) Login(ctx context.Context, req *LoginRequest) (*Logi
 	}, nil
 }
 
-func (s *UserServiceServer) GetProfile(ctx context.Context, req *GetProfileRequest) (*UserProfile, error) {
+func (s *UserServiceServer) GetProfile(ctx context.Context, req *userv1.GetProfileRequest) (*userv1.UserProfile, error) {
 	user, err := s.uc.GetProfile(req.UserId)
 	if err != nil {
-		return nil, mapDomainError(err)
+		return nil, status.Error(codes.NotFound, "user not found")
 	}
-	return &UserProfile{
+	return &userv1.UserProfile{
 		Id:        user.ID,
 		Username:  user.Username,
 		Email:     user.Email,
@@ -124,12 +71,12 @@ func (s *UserServiceServer) GetProfile(ctx context.Context, req *GetProfileReque
 	}, nil
 }
 
-func (s *UserServiceServer) ValidateToken(ctx context.Context, req *ValidateTokenRequest) (*ValidateTokenResponse, error) {
+func (s *UserServiceServer) ValidateToken(ctx context.Context, req *userv1.ValidateTokenRequest) (*userv1.ValidateTokenResponse, error) {
 	userID, role, err := s.uc.ValidateToken(req.Token)
 	if err != nil {
-		return &ValidateTokenResponse{Valid: false}, nil
+		return &userv1.ValidateTokenResponse{Valid: false}, nil
 	}
-	return &ValidateTokenResponse{
+	return &userv1.ValidateTokenResponse{
 		Valid:  true,
 		UserId: userID,
 		Role:   role,
@@ -152,6 +99,3 @@ func mapDomainError(err error) error {
 		return status.Error(codes.Internal, "internal server error")
 	}
 }
-
-// Ensure unused import is used
-var _ = emptypb.Empty{}

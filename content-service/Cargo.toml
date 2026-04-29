@@ -13,7 +13,7 @@ redis = { version = "0.25", features = ["tokio-comp"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 tracing = "0.1"
-tracing-subscriber = "0.3"
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 anyhow = "1"
 thiserror = "1"
 tonic-reflection = "0.12"

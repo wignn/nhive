@@ -3,64 +3,99 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
+	grpcserver "github.com/novelhive/novel-service/internal/grpc"
 	"github.com/novelhive/novel-service/internal/events"
 	"github.com/novelhive/novel-service/internal/repository"
 	"github.com/novelhive/novel-service/internal/usecase"
+	novelv1 "github.com/novelhive/proto/novel/v1"
+	"github.com/novelhive/pkg/grpclog"
+	"github.com/novelhive/pkg/logger"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"os"
 )
 
 func main() {
+	log := logger.New("novel-service")
+	defer log.Sync()
+
 	dbURL := getEnv("DATABASE_URL", "postgres://novelhive:secret@localhost:5432/novelhive_novels?sslmode=disable")
 	redisURL := getEnv("REDIS_URL", "redis://localhost:6379/1")
 	natsURL := getEnv("NATS_URL", "nats://localhost:4222")
 	grpcPort := getEnv("GRPC_PORT", "50052")
 
-	// PostgreSQL
+	log.Info("connecting to database")
 	pool, err := pgxpool.New(context.Background(), dbURL)
 	if err != nil {
-		log.Fatalf("DB connect failed: %v", err)
+		log.Fatal("failed to connect to database", zap.Error(err))
 	}
 	defer pool.Close()
+
+	log.Info("running database migrations")
 	runMigrations(pool)
 
-	// Redis
-	opt, _ := redis.ParseURL(redisURL)
+	opt, err := redis.ParseURL(redisURL)
+	if err != nil {
+		log.Warn("failed to parse redis URL", zap.Error(err))
+	}
 	rdb := redis.NewClient(opt)
 	cache := repository.NewRedisCache(rdb)
+	log.Info("connected to redis", zap.String("url", redisURL))
 
-	// NATS
 	nc, err := nats.Connect(natsURL)
 	if err != nil {
-		log.Printf("NATS connect failed (non-fatal): %v", err)
+		log.Warn("NATS connect failed (non-fatal)", zap.String("url", natsURL), zap.Error(err))
+	} else {
+		log.Info("connected to NATS", zap.String("url", natsURL))
 	}
 	var publisher *events.NATSPublisher
 	if nc != nil {
 		publisher, _ = events.NewNATSPublisher(nc)
 	}
 
-	// Repos & usecase
 	novelRepo := repository.NewPostgresNovelRepo(pool)
 	chapterRepo := repository.NewPostgresChapterRepo(pool)
 	genreRepo := repository.NewPostgresGenreRepo(pool)
-	_ = usecase.NewNovelUsecase(novelRepo, chapterRepo, genreRepo, cache, publisher)
+	novelUC := usecase.NewNovelUsecase(novelRepo, chapterRepo, genreRepo, cache, publisher)
 
-	// gRPC
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", grpcPort))
 	if err != nil {
-		log.Fatalf("Listen failed: %v", err)
+		log.Fatal("failed to listen", zap.String("port", grpcPort), zap.Error(err))
 	}
-	grpcServer := grpc.NewServer()
-	reflection.Register(grpcServer)
-	log.Printf("Novel Service listening on :%s", grpcPort)
-	grpcServer.Serve(lis)
+
+	grpcSrv := grpc.NewServer(
+		grpc.UnaryInterceptor(grpclog.UnaryServerInterceptor(log)),
+	)
+	novelv1.RegisterNovelServiceServer(grpcSrv, grpcserver.NewNovelServiceServer(novelUC))
+	reflection.Register(grpcSrv)
+
+	log.Info("novel-service started", zap.String("port", grpcPort))
+
+	// Graceful shutdown
+	go func() {
+		if err := grpcSrv.Serve(lis); err != nil {
+			log.Fatal("grpc serve failed", zap.Error(err))
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Info("shutting down novel-service")
+	grpcSrv.GracefulStop()
+	if nc != nil {
+		nc.Close()
+	}
+	log.Info("novel-service stopped")
 }
 
 func runMigrations(pool *pgxpool.Pool) {

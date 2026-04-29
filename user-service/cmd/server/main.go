@@ -3,52 +3,72 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/novelhive/user-service/internal/config"
+	grpcserver "github.com/novelhive/user-service/internal/grpc"
 	"github.com/novelhive/user-service/internal/repository"
 	"github.com/novelhive/user-service/internal/usecase"
+	userv1 "github.com/novelhive/proto/user/v1"
+	"github.com/novelhive/pkg/grpclog"
+	"github.com/novelhive/pkg/logger"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 func main() {
+	log := logger.New("user-service")
+	defer log.Sync()
+
 	cfg := config.Load()
 
-	// Connect to PostgreSQL
+	log.Info("connecting to database")
 	pool, err := pgxpool.New(context.Background(), cfg.DatabaseURL)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		log.Fatal("failed to connect to database", zap.Error(err))
 	}
 	defer pool.Close()
 
-	// Run migrations
+	log.Info("running database migrations")
 	if err := runMigrations(pool); err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
+		log.Fatal("failed to run migrations", zap.Error(err))
 	}
 
-	// Setup layers
 	userRepo := repository.NewPostgresUserRepo(pool)
 	userUC := usecase.NewUserUsecase(userRepo, cfg.JWTSecret)
-	_ = userUC // Will be used when proto-gen server is ready
 
-	// Start gRPC server
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.GRPCPort))
 	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
+		log.Fatal("failed to listen", zap.String("port", cfg.GRPCPort), zap.Error(err))
 	}
 
-	grpcServer := grpc.NewServer()
-	// TODO: Register proto-generated service here
-	// pb.RegisterUserServiceServer(grpcServer, grpcserver.NewUserServiceServer(userUC))
-	reflection.Register(grpcServer)
+	grpcSrv := grpc.NewServer(
+		grpc.UnaryInterceptor(grpclog.UnaryServerInterceptor(log)),
+	)
+	userv1.RegisterUserServiceServer(grpcSrv, grpcserver.NewUserServiceServer(userUC))
+	reflection.Register(grpcSrv)
 
-	log.Printf("User Service listening on :%s", cfg.GRPCPort)
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
-	}
+	log.Info("user-service started", zap.String("port", cfg.GRPCPort))
+
+	// Graceful shutdown
+	go func() {
+		if err := grpcSrv.Serve(lis); err != nil {
+			log.Fatal("grpc serve failed", zap.Error(err))
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Info("shutting down user-service")
+	grpcSrv.GracefulStop()
+	log.Info("user-service stopped")
 }
 
 func runMigrations(pool *pgxpool.Pool) error {

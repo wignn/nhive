@@ -12,22 +12,24 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/novelhive/gateway/internal/clients"
 	"github.com/novelhive/gateway/internal/middleware"
 	"github.com/novelhive/gateway/internal/storage"
-	"github.com/novelhive/gateway/internal/store"
+	commentv1 "github.com/novelhive/proto/comment/v1"
+	libraryv1 "github.com/novelhive/proto/library/v1"
+	novelv1 "github.com/novelhive/proto/novel/v1"
+	userv1 "github.com/novelhive/proto/user/v1"
 )
 
 type Handlers struct {
-	Store     *store.Store
+	Clients   *clients.Clients
 	JWTSecret []byte
 	R2Client  *storage.R2Client
 }
 
-func New(s *store.Store, jwtSecret string, r2 *storage.R2Client) *Handlers {
-	return &Handlers{Store: s, JWTSecret: []byte(jwtSecret), R2Client: r2}
+func New(c *clients.Clients, jwtSecret string, r2 *storage.R2Client) *Handlers {
+	return &Handlers{Clients: c, JWTSecret: []byte(jwtSecret), R2Client: r2}
 }
-
-// --- helpers ---
 
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
@@ -40,7 +42,7 @@ func writeError(w http.ResponseWriter, status int, msg string) {
 }
 
 func readJSON(r *http.Request, v interface{}) error {
-	dec := json.NewDecoder(http.MaxBytesReader(nil, r.Body, 1<<20)) // 1MB limit
+	dec := json.NewDecoder(http.MaxBytesReader(nil, r.Body, 1<<20))
 	return dec.Decode(v)
 }
 
@@ -48,19 +50,28 @@ func sanitize(s string) string {
 	return strings.TrimSpace(html.EscapeString(s))
 }
 
-func (h *Handlers) generateToken(u *store.User) (string, error) {
+func (h *Handlers) r2BaseURL() string {
+	if h.R2Client == nil {
+		return ""
+	}
+	if h.R2Client.Config.R2PublicURL != "" {
+		return h.R2Client.Config.R2PublicURL
+	}
+	return fmt.Sprintf("%s/%s", h.R2Client.Config.R2Endpoint, h.R2Client.Config.R2BucketName)
+}
+
+func (h *Handlers) generateToken(userID, username, email, role, avatarURL string) (string, error) {
 	claims := jwt.MapClaims{
-		"sub":      u.ID,
-		"username": u.Username,
-		"email":    u.Email,
-		"role":     u.Role,
-		"avatar":   u.AvatarURL,
+		"sub":      userID,
+		"username": username,
+		"email":    email,
+		"role":     role,
+		"avatar":   avatarURL,
 		"exp":      time.Now().Add(72 * time.Hour).Unix(),
 		"iat":      time.Now().Unix(),
 	}
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(h.JWTSecret)
 }
-
 
 func (h *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 	var req struct {
@@ -75,21 +86,22 @@ func (h *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 	req.Username = sanitize(req.Username)
 	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 	if len(req.Username) < 3 || len(req.Email) < 5 || len(req.Password) < 6 {
-		writeError(w, 400, "username must be 3+ chars, password 6+ chars")
+		writeError(w, 400, "username ≥3 chars, password ≥6 chars")
 		return
 	}
-	user, err := h.Store.CreateUser(req.Username, req.Email, req.Password, "reader")
+
+	resp, err := h.Clients.User.Register(r.Context(), &userv1.RegisterRequest{
+		Username: req.Username,
+		Email:    req.Email,
+		Password: req.Password,
+	})
 	if err != nil {
 		writeError(w, 409, err.Error())
 		return
 	}
-	token, _ := h.generateToken(user)
 	writeJSON(w, 201, map[string]interface{}{
-		"user_id": user.ID, "token": token,
-		"user": map[string]string{
-			"id": user.ID, "username": user.Username,
-			"email": user.Email, "role": user.Role,
-		},
+		"user_id": resp.UserId,
+		"token":   resp.Token,
 	})
 }
 
@@ -102,32 +114,40 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 400, "invalid request body")
 		return
 	}
-	user, err := h.Store.AuthenticateUser(req.Email, req.Password)
+	resp, err := h.Clients.User.Login(r.Context(), &userv1.LoginRequest{
+		Email:    req.Email,
+		Password: req.Password,
+	})
 	if err != nil {
 		writeError(w, 401, "invalid email or password")
 		return
 	}
-	token, _ := h.generateToken(user)
 	writeJSON(w, 200, map[string]interface{}{
-		"user_id": user.ID, "token": token,
+		"user_id": resp.UserId,
+		"token":   resp.Token,
 		"user": map[string]string{
-			"id": user.ID, "username": user.Username,
-			"email": user.Email, "role": user.Role,
-			"avatar_url": user.AvatarURL,
+			"id":         resp.Profile.Id,
+			"username":   resp.Profile.Username,
+			"email":      resp.Profile.Email,
+			"role":       resp.Profile.Role,
+			"avatar_url": resp.Profile.AvatarUrl,
 		},
 	})
 }
 
 func (h *Handlers) GetProfile(w http.ResponseWriter, r *http.Request) {
 	uid := middleware.GetUserID(r.Context())
-	user, err := h.Store.GetUser(uid)
+	resp, err := h.Clients.User.GetProfile(r.Context(), &userv1.GetProfileRequest{UserId: uid})
 	if err != nil {
 		writeError(w, 404, "user not found")
 		return
 	}
 	writeJSON(w, 200, map[string]string{
-		"id": user.ID, "username": user.Username,
-		"email": user.Email, "role": user.Role,
+		"id":         resp.Id,
+		"username":   resp.Username,
+		"email":      resp.Email,
+		"role":       resp.Role,
+		"avatar_url": resp.AvatarUrl,
 	})
 }
 
@@ -135,62 +155,68 @@ func (h *Handlers) GetProfile(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) ListNovels(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	page, _ := strconv.Atoi(q.Get("page"))
-	if page < 1 { page = 1 }
+	if page < 1 {
+		page = 1
+	}
 	pageSize, _ := strconv.Atoi(q.Get("page_size"))
-	if pageSize < 1 || pageSize > 50 { pageSize = 20 }
-	novels, total := h.Store.ListNovels(q.Get("genre"), q.Get("status"), q.Get("sort"), page, pageSize)
-	baseURL := ""
-	if h.R2Client != nil {
-		baseURL = h.R2Client.Config.R2PublicURL
-		if baseURL == "" {
-			baseURL = fmt.Sprintf("%s/%s", h.R2Client.Config.R2Endpoint, h.R2Client.Config.R2BucketName)
-		}
+	if pageSize < 1 || pageSize > 50 {
+		pageSize = 20
+	}
+
+	resp, err := h.Clients.Novel.ListNovels(r.Context(), &novelv1.ListNovelsRequest{
+		Page:      int32(page),
+		PageSize:  int32(pageSize),
+		GenreSlug: q.Get("genre"),
+		Status:    q.Get("status"),
+		SortBy:    q.Get("sort"),
+	})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
 	}
 	writeJSON(w, 200, map[string]interface{}{
-		"novels": novels, "total": total, "page": page, "page_size": pageSize,
-		"cover_base_url": baseURL,
+		"novels":         resp.Novels,
+		"total":          resp.Total,
+		"page":           page,
+		"page_size":      pageSize,
+		"cover_base_url": h.r2BaseURL(),
 	})
 }
 
 func (h *Handlers) GetNovel(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-	novel, err := h.Store.GetNovelBySlug(slug)
+	resp, err := h.Clients.Novel.GetNovel(r.Context(), &novelv1.GetNovelRequest{Slug: slug})
 	if err != nil {
 		writeError(w, 404, "novel not found")
 		return
 	}
-	baseURL := ""
-	if h.R2Client != nil {
-		baseURL = h.R2Client.Config.R2PublicURL
-		if baseURL == "" {
-			baseURL = fmt.Sprintf("%s/%s", h.R2Client.Config.R2Endpoint, h.R2Client.Config.R2BucketName)
-		}
-	}
 	writeJSON(w, 200, map[string]interface{}{
-		"novel": novel,
-		"cover_base_url": baseURL,
+		"novel":          resp,
+		"cover_base_url": h.r2BaseURL(),
 	})
 }
 
 func (h *Handlers) ListChapters(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-	chs, err := h.Store.ListChapters(slug)
+	// First get novel to get its ID
+	novel, err := h.Clients.Novel.GetNovel(r.Context(), &novelv1.GetNovelRequest{Slug: slug})
 	if err != nil {
-		writeError(w, 404, err.Error())
+		writeError(w, 404, "novel not found")
 		return
 	}
-	// Strip content from list response
-	type ChSummary struct {
-		ID        string `json:"id"`
-		Number    int    `json:"number"`
-		Title     string `json:"title"`
-		WordCount int    `json:"word_count"`
+	resp, err := h.Clients.Novel.ListChapters(r.Context(), &novelv1.ListChaptersRequest{
+		NovelId:  novel.Id,
+		Page:     1,
+		PageSize: 500,
+	})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
 	}
-	var summaries []ChSummary
-	for _, ch := range chs {
-		summaries = append(summaries, ChSummary{ID: ch.ID, Number: ch.Number, Title: ch.Title, WordCount: ch.WordCount})
-	}
-	writeJSON(w, 200, map[string]interface{}{"chapters": summaries, "total": len(summaries)})
+	writeJSON(w, 200, map[string]interface{}{
+		"chapters": resp.Chapters,
+		"total":    resp.Total,
+	})
 }
 
 func (h *Handlers) ReadChapter(w http.ResponseWriter, r *http.Request) {
@@ -200,22 +226,37 @@ func (h *Handlers) ReadChapter(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 400, "invalid chapter number")
 		return
 	}
-	ch, novel, err := h.Store.GetChapter(slug, num)
+	ch, err := h.Clients.Novel.GetChapter(r.Context(), &novelv1.GetChapterRequest{
+		NovelSlug:     slug,
+		ChapterNumber: int32(num),
+	})
 	if err != nil {
-		writeError(w, 404, err.Error())
+		writeError(w, 404, "chapter not found")
 		return
 	}
+	novel, _ := h.Clients.Novel.GetNovel(r.Context(), &novelv1.GetNovelRequest{Slug: slug})
+	var totalChapters int32
+	if novel != nil {
+		totalChapters = novel.TotalChapters
+	}
 	writeJSON(w, 200, map[string]interface{}{
-		"id": ch.ID, "novel_id": novel.ID, "novel_title": novel.Title,
-		"novel_slug": novel.Slug, "number": ch.Number,
-		"title": ch.Title, "content": ch.Content,
-		"word_count": ch.WordCount, "total_chapters": novel.TotalChapters,
-		"has_prev": ch.Number > 1, "has_next": ch.Number < novel.TotalChapters,
-		"prev_number": ch.Number - 1, "next_number": ch.Number + 1,
+		"id":             ch.Id,
+		"novel_id":       ch.NovelId,
+		"novel_title":    func() string { if novel != nil { return novel.Title }; return "" }(),
+		"novel_slug":     slug,
+		"number":         ch.Number,
+		"title":          ch.Title,
+		"content":        ch.Content,
+		"word_count":     ch.WordCount,
+		"total_chapters": totalChapters,
+		"has_prev":       ch.Number > 1,
+		"has_next":       ch.Number < totalChapters,
+		"prev_number":    ch.Number - 1,
+		"next_number":    ch.Number + 1,
 	})
 }
 
-// === SEARCH ===
+// ─── Search ──────────────────────────────────────────────────────────────────
 
 func (h *Handlers) Search(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
@@ -223,118 +264,229 @@ func (h *Handlers) Search(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]interface{}{"hits": []interface{}{}, "total": 0})
 		return
 	}
-	results := h.Store.SearchNovels(q)
+	// Fallback: list novels and filter in-process (search-service not wired yet)
+	resp, err := h.Clients.Novel.ListNovels(r.Context(), &novelv1.ListNovelsRequest{Page: 1, PageSize: 50})
+	if err != nil {
+		writeJSON(w, 200, map[string]interface{}{"hits": []interface{}{}, "total": 0})
+		return
+	}
+	ql := strings.ToLower(q)
+	var hits []*novelv1.Novel
+	for _, n := range resp.Novels {
+		if strings.Contains(strings.ToLower(n.Title), ql) ||
+			strings.Contains(strings.ToLower(n.Author), ql) ||
+			strings.Contains(strings.ToLower(n.Synopsis), ql) {
+			hits = append(hits, n)
+		}
+	}
 	writeJSON(w, 200, map[string]interface{}{
-		"hits": results, "total": len(results), "query": q, "took_ms": 2.1,
+		"hits": hits, "total": len(hits), "query": q, "took_ms": 1.0,
 	})
 }
 
 func (h *Handlers) Autocomplete(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
-	results := h.Store.SearchNovels(q)
+	resp, _ := h.Clients.Novel.ListNovels(r.Context(), &novelv1.ListNovelsRequest{Page: 1, PageSize: 50})
+	ql := strings.ToLower(q)
 	var suggestions []map[string]string
-	for _, n := range results {
-		suggestions = append(suggestions, map[string]string{"title": n.Title, "slug": n.Slug})
+	if resp != nil {
+		for _, n := range resp.Novels {
+			if strings.Contains(strings.ToLower(n.Title), ql) {
+				suggestions = append(suggestions, map[string]string{"title": n.Title, "slug": n.Slug})
+			}
+		}
 	}
 	writeJSON(w, 200, map[string]interface{}{"suggestions": suggestions})
 }
 
-// === COMMENTS ===
+// ─── Genres ──────────────────────────────────────────────────────────────────
+
+func (h *Handlers) ListGenres(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.Clients.Novel.ListGenres(r.Context(), &novelv1.ListGenresRequest{})
+	if err != nil {
+		writeJSON(w, 200, map[string]interface{}{"genres": []interface{}{}})
+		return
+	}
+	// Return as simple string list for backwards compat
+	var genres []string
+	for _, g := range resp.Genres {
+		genres = append(genres, g.Name)
+	}
+	writeJSON(w, 200, map[string]interface{}{"genres": genres})
+}
+
+// ─── Comments ────────────────────────────────────────────────────────────────
 
 func (h *Handlers) ListComments(w http.ResponseWriter, r *http.Request) {
 	chapterID := chi.URLParam(r, "chapterId")
-	comments := h.Store.ListComments(chapterID)
-	if comments == nil { comments = []*store.Comment{} }
-	writeJSON(w, 200, map[string]interface{}{"comments": comments, "total": len(comments)})
+	resp, err := h.Clients.Comment.ListComments(r.Context(), &commentv1.ListCommentsRequest{
+		ChapterId: chapterID,
+		Page:      1,
+		PageSize:  50,
+	})
+	if err != nil || resp == nil {
+		writeJSON(w, 200, map[string]interface{}{"comments": []interface{}{}, "total": 0})
+		return
+	}
+	writeJSON(w, 200, map[string]interface{}{"comments": resp.Comments, "total": resp.Total})
 }
 
 func (h *Handlers) CreateComment(w http.ResponseWriter, r *http.Request) {
 	uid := middleware.GetUserID(r.Context())
-	user, _ := h.Store.GetUser(uid)
-	var req struct{ Content string `json:"content"` }
+	var req struct {
+		Content string `json:"content"`
+	}
 	if err := readJSON(r, &req); err != nil || strings.TrimSpace(req.Content) == "" {
 		writeError(w, 400, "content is required")
 		return
 	}
-	c := &store.Comment{
-		ChapterID: chi.URLParam(r, "chapterId"),
-		UserID: uid, Username: user.Username,
-		Content: sanitize(req.Content),
+	resp, err := h.Clients.Comment.CreateComment(r.Context(), &commentv1.CreateCommentRequest{
+		ChapterId: chi.URLParam(r, "chapterId"),
+		UserId:    uid,
+		Content:   sanitize(req.Content),
+	})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
 	}
-	h.Store.CreateComment(c)
-	writeJSON(w, 201, c)
+	writeJSON(w, 201, resp)
 }
 
 func (h *Handlers) LikeComment(w http.ResponseWriter, r *http.Request) {
-	h.Store.LikeComment(chi.URLParam(r, "commentId"))
-	writeJSON(w, 200, map[string]string{"status": "liked"})
+	uid := middleware.GetUserID(r.Context())
+	resp, _ := h.Clients.Comment.LikeComment(r.Context(), &commentv1.LikeCommentRequest{
+		CommentId: chi.URLParam(r, "commentId"),
+		UserId:    uid,
+	})
+	writeJSON(w, 200, resp)
 }
 
-// === LIBRARY ===
+// ─── Library ─────────────────────────────────────────────────────────────────
 
 func (h *Handlers) GetLibrary(w http.ResponseWriter, r *http.Request) {
 	uid := middleware.GetUserID(r.Context())
-	entries := h.Store.GetLibrary(uid)
-	if entries == nil { entries = []*store.LibraryEntry{} }
-	writeJSON(w, 200, map[string]interface{}{"entries": entries, "total": len(entries)})
+	resp, err := h.Clients.Library.GetLibrary(r.Context(), &libraryv1.GetLibraryRequest{UserId: uid})
+	if err != nil || resp == nil {
+		writeJSON(w, 200, map[string]interface{}{"entries": []interface{}{}, "total": 0})
+		return
+	}
+	writeJSON(w, 200, map[string]interface{}{"entries": resp.Entries, "total": resp.Total})
 }
 
 func (h *Handlers) AddToLibrary(w http.ResponseWriter, r *http.Request) {
 	uid := middleware.GetUserID(r.Context())
-	novelID := chi.URLParam(r, "novelId")
-	if err := h.Store.AddToLibrary(uid, novelID); err != nil {
+	_, err := h.Clients.Library.AddToLibrary(r.Context(), &libraryv1.AddToLibraryRequest{
+		UserId:  uid,
+		NovelId: chi.URLParam(r, "novelId"),
+	})
+	if err != nil {
 		writeError(w, 409, err.Error())
 		return
 	}
 	writeJSON(w, 201, map[string]string{"status": "added"})
 }
 
+func (h *Handlers) RemoveFromLibrary(w http.ResponseWriter, r *http.Request) {
+	uid := middleware.GetUserID(r.Context())
+	_, err := h.Clients.Library.RemoveFromLibrary(r.Context(), &libraryv1.RemoveFromLibraryRequest{
+		UserId:  uid,
+		NovelId: chi.URLParam(r, "novelId"),
+	})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, 200, map[string]string{"status": "removed"})
+}
+
 func (h *Handlers) UpdateLibraryStatus(w http.ResponseWriter, r *http.Request) {
 	uid := middleware.GetUserID(r.Context())
-	var req struct{ Status string `json:"status"` }
+	var req struct {
+		Status string `json:"status"`
+	}
 	readJSON(r, &req)
-	h.Store.UpdateLibraryStatus(uid, chi.URLParam(r, "novelId"), req.Status)
+	h.Clients.Library.UpdateStatus(r.Context(), &libraryv1.UpdateStatusRequest{
+		UserId:  uid,
+		NovelId: chi.URLParam(r, "novelId"),
+		Status:  req.Status,
+	})
 	writeJSON(w, 200, map[string]string{"status": "updated"})
 }
 
 func (h *Handlers) GetProgress(w http.ResponseWriter, r *http.Request) {
 	uid := middleware.GetUserID(r.Context())
-	p := h.Store.GetProgress(uid, chi.URLParam(r, "novelId"))
-	if p == nil {
+	resp, err := h.Clients.Library.GetProgress(r.Context(), &libraryv1.GetProgressRequest{
+		UserId:  uid,
+		NovelId: chi.URLParam(r, "novelId"),
+	})
+	if err != nil || resp == nil {
 		writeJSON(w, 200, map[string]interface{}{"chapter_number": 0, "scroll_position": 0})
 		return
 	}
-	writeJSON(w, 200, p)
+	writeJSON(w, 200, map[string]interface{}{
+		"chapter_number":  resp.ChapterNumber,
+		"scroll_position": resp.ScrollPosition,
+	})
 }
 
 func (h *Handlers) SaveProgress(w http.ResponseWriter, r *http.Request) {
 	uid := middleware.GetUserID(r.Context())
 	var req struct {
-		ChapterNumber  int `json:"chapter_number"`
-		ScrollPosition int `json:"scroll_position"`
+		ChapterNumber  int32   `json:"chapter_number"`
+		ScrollPosition float32 `json:"scroll_position"`
 	}
 	readJSON(r, &req)
-	h.Store.SaveProgress(uid, chi.URLParam(r, "novelId"), req.ChapterNumber, req.ScrollPosition)
+	h.Clients.Library.SaveProgress(r.Context(), &libraryv1.SaveProgressRequest{
+		UserId:         uid,
+		NovelId:        chi.URLParam(r, "novelId"),
+		ChapterNumber:  req.ChapterNumber,
+		ScrollPosition: req.ScrollPosition,
+	})
 	writeJSON(w, 200, map[string]string{"status": "saved"})
 }
 
 func (h *Handlers) GetBookmarks(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, 200, map[string]interface{}{"bookmarks": []interface{}{}})
+	uid := middleware.GetUserID(r.Context())
+	novelID := r.URL.Query().Get("novel_id")
+	resp, err := h.Clients.Library.GetBookmarks(r.Context(), &libraryv1.GetBookmarksRequest{
+		UserId:  uid,
+		NovelId: novelID,
+	})
+	if err != nil || resp == nil {
+		writeJSON(w, 200, map[string]interface{}{"bookmarks": []interface{}{}})
+		return
+	}
+	writeJSON(w, 200, map[string]interface{}{"bookmarks": resp.Bookmarks})
 }
 
 func (h *Handlers) AddBookmark(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, 201, map[string]string{"status": "bookmarked"})
+	uid := middleware.GetUserID(r.Context())
+	var req struct {
+		NovelID   string `json:"novel_id"`
+		ChapterID string `json:"chapter_id"`
+		Note      string `json:"note"`
+	}
+	readJSON(r, &req)
+	resp, err := h.Clients.Library.AddBookmark(r.Context(), &libraryv1.AddBookmarkRequest{
+		UserId:    uid,
+		NovelId:   req.NovelID,
+		ChapterId: req.ChapterID,
+		Note:      req.Note,
+	})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, 201, resp)
 }
 
-// === ADMIN ===
 
 func (h *Handlers) AdminUploadImage(w http.ResponseWriter, r *http.Request) {
 	if h.R2Client == nil {
 		writeError(w, 500, "R2 storage not configured")
 		return
 	}
-
-	r.ParseMultipartForm(10 << 20) // 10 MB
+	r.ParseMultipartForm(10 << 20)
 	file, handler, err := r.FormFile("image")
 	if err != nil {
 		writeError(w, 400, "invalid file upload")
@@ -354,11 +506,7 @@ func (h *Handlers) AdminUploadImage(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 500, err.Error())
 		return
 	}
-
-	writeJSON(w, 200, map[string]string{
-		"path":     path,
-		"base_url": baseURL,
-	})
+	writeJSON(w, 200, map[string]string{"path": path, "base_url": baseURL})
 }
 
 func (h *Handlers) AdminCreateNovel(w http.ResponseWriter, r *http.Request) {
@@ -374,35 +522,39 @@ func (h *Handlers) AdminCreateNovel(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 400, "invalid body")
 		return
 	}
-	slug := strings.ToLower(req.Title)
-	slug = strings.Join(strings.Fields(slug), "-")
-	for _, ch := range "!@#$%^&*()+={}[]|;:'\",.<>?/" {
-		slug = strings.ReplaceAll(slug, string(ch), "")
-	}
-	baseURL := ""
-	if h.R2Client != nil {
-		baseURL = h.R2Client.Config.R2PublicURL
-		if baseURL == "" {
-			baseURL = fmt.Sprintf("%s/%s", h.R2Client.Config.R2Endpoint, h.R2Client.Config.R2BucketName)
-		}
-		baseURL = baseURL + "/"
-	}
-	
+
+	baseURL := h.r2BaseURL()
 	coverURL := req.CoverURL
-	if baseURL != "" && strings.HasPrefix(coverURL, baseURL) {
-		coverURL = strings.TrimPrefix(coverURL, baseURL)
+	if baseURL != "" && strings.HasPrefix(coverURL, baseURL+"/") {
+		coverURL = strings.TrimPrefix(coverURL, baseURL+"/")
 	}
 
-	n := &store.Novel{
-		Title: sanitize(req.Title), Slug: slug,
-		Synopsis: sanitize(req.Synopsis), Author: sanitize(req.Author),
-		Status: req.Status, CoverURL: coverURL, Genres: req.Genres,
+	var genreIDs []int32
+	genreResp, _ := h.Clients.Novel.ListGenres(r.Context(), &novelv1.ListGenresRequest{})
+	if genreResp != nil {
+		genreMap := map[string]int32{}
+		for _, g := range genreResp.Genres {
+			genreMap[strings.ToLower(g.Name)] = g.Id
+		}
+		for _, gName := range req.Genres {
+			if id, ok := genreMap[strings.ToLower(gName)]; ok {
+				genreIDs = append(genreIDs, id)
+			}
+		}
 	}
-	if err := h.Store.CreateNovel(n); err != nil {
+
+	novel, err := h.Clients.Novel.CreateNovel(r.Context(), &novelv1.CreateNovelRequest{
+		Title:    sanitize(req.Title),
+		Synopsis: sanitize(req.Synopsis),
+		Author:   sanitize(req.Author),
+		CoverUrl: coverURL,
+		GenreIds: genreIDs,
+	})
+	if err != nil {
 		writeError(w, 409, err.Error())
 		return
 	}
-	writeJSON(w, 201, n)
+	writeJSON(w, 201, novel)
 }
 
 func (h *Handlers) AdminUpdateNovel(w http.ResponseWriter, r *http.Request) {
@@ -417,21 +569,36 @@ func (h *Handlers) AdminUpdateNovel(w http.ResponseWriter, r *http.Request) {
 	readJSON(r, &req)
 	id := chi.URLParam(r, "id")
 
-	baseURL := ""
-	if h.R2Client != nil {
-		baseURL = h.R2Client.Config.R2PublicURL
-		if baseURL == "" {
-			baseURL = fmt.Sprintf("%s/%s", h.R2Client.Config.R2Endpoint, h.R2Client.Config.R2BucketName)
-		}
-		baseURL = baseURL + "/"
-	}
-	
+	baseURL := h.r2BaseURL()
 	coverURL := req.CoverURL
-	if baseURL != "" && strings.HasPrefix(coverURL, baseURL) {
-		coverURL = strings.TrimPrefix(coverURL, baseURL)
+	if baseURL != "" && strings.HasPrefix(coverURL, baseURL+"/") {
+		coverURL = strings.TrimPrefix(coverURL, baseURL+"/")
 	}
 
-	if err := h.Store.UpdateNovel(id, sanitize(req.Title), sanitize(req.Synopsis), sanitize(req.Author), req.Status, coverURL, req.Genres); err != nil {
+	var genreIDs []int32
+	genreResp, _ := h.Clients.Novel.ListGenres(r.Context(), &novelv1.ListGenresRequest{})
+	if genreResp != nil {
+		genreMap := map[string]int32{}
+		for _, g := range genreResp.Genres {
+			genreMap[strings.ToLower(g.Name)] = g.Id
+		}
+		for _, gName := range req.Genres {
+			if gid, ok := genreMap[strings.ToLower(gName)]; ok {
+				genreIDs = append(genreIDs, gid)
+			}
+		}
+	}
+
+	_, err := h.Clients.Novel.UpdateNovel(r.Context(), &novelv1.UpdateNovelRequest{
+		Id:       id,
+		Title:    sanitize(req.Title),
+		Synopsis: sanitize(req.Synopsis),
+		Author:   sanitize(req.Author),
+		Status:   req.Status,
+		CoverUrl: coverURL,
+		GenreIds: genreIDs,
+	})
+	if err != nil {
 		writeError(w, 404, err.Error())
 		return
 	}
@@ -439,11 +606,27 @@ func (h *Handlers) AdminUpdateNovel(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) AdminDeleteNovel(w http.ResponseWriter, r *http.Request) {
-	if err := h.Store.DeleteNovel(chi.URLParam(r, "id")); err != nil {
+	_, err := h.Clients.Novel.DeleteNovel(r.Context(), &novelv1.DeleteNovelRequest{
+		Id: chi.URLParam(r, "id"),
+	})
+	if err != nil {
 		writeError(w, 404, err.Error())
 		return
 	}
 	writeJSON(w, 200, map[string]string{"status": "deleted"})
+}
+
+func (h *Handlers) AdminListNovels(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.Clients.Novel.ListNovels(r.Context(), &novelv1.ListNovelsRequest{Page: 1, PageSize: 100})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, 200, map[string]interface{}{
+		"novels":         resp.Novels,
+		"total":          resp.Total,
+		"cover_base_url": h.r2BaseURL(),
+	})
 }
 
 func (h *Handlers) AdminCreateChapter(w http.ResponseWriter, r *http.Request) {
@@ -457,12 +640,17 @@ func (h *Handlers) AdminCreateChapter(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 400, "invalid body")
 		return
 	}
-	ch := &store.Chapter{
-		NovelID: req.NovelID, Number: req.Number,
-		Title: sanitize(req.Title), Content: req.Content,
+	ch, err := h.Clients.Novel.CreateChapter(r.Context(), &novelv1.CreateChapterRequest{
+		NovelId: req.NovelID,
+		Number:  int32(req.Number),
+		Title:   sanitize(req.Title),
+		Content: req.Content,
+	})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
 	}
-	h.Store.CreateChapter(ch)
-	writeJSON(w, 201, map[string]interface{}{"id": ch.ID, "word_count": ch.WordCount})
+	writeJSON(w, 201, map[string]interface{}{"id": ch.Id, "word_count": ch.WordCount})
 }
 
 func (h *Handlers) AdminUpdateChapter(w http.ResponseWriter, r *http.Request) {
@@ -471,7 +659,12 @@ func (h *Handlers) AdminUpdateChapter(w http.ResponseWriter, r *http.Request) {
 		Content string `json:"content"`
 	}
 	readJSON(r, &req)
-	if err := h.Store.UpdateChapter(chi.URLParam(r, "id"), sanitize(req.Title), req.Content); err != nil {
+	_, err := h.Clients.Novel.UpdateChapter(r.Context(), &novelv1.UpdateChapterRequest{
+		Id:      chi.URLParam(r, "id"),
+		Title:   sanitize(req.Title),
+		Content: req.Content,
+	})
+	if err != nil {
 		writeError(w, 404, err.Error())
 		return
 	}
@@ -479,45 +672,37 @@ func (h *Handlers) AdminUpdateChapter(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) AdminDeleteChapter(w http.ResponseWriter, r *http.Request) {
-	if err := h.Store.DeleteChapter(chi.URLParam(r, "id")); err != nil {
-		writeError(w, 404, err.Error())
-		return
-	}
-	writeJSON(w, 200, map[string]string{"status": "deleted"})
-}
-
-func (h *Handlers) AdminListNovels(w http.ResponseWriter, r *http.Request) {
-	novels, total := h.Store.ListNovels("", "", "updated", 1, 100)
-	baseURL := ""
-	if h.R2Client != nil {
-		baseURL = h.R2Client.Config.R2PublicURL
-		if baseURL == "" {
-			baseURL = fmt.Sprintf("%s/%s", h.R2Client.Config.R2Endpoint, h.R2Client.Config.R2BucketName)
-		}
-	}
-	writeJSON(w, 200, map[string]interface{}{"novels": novels, "total": total, "cover_base_url": baseURL})
+	// No delete chapter RPC in proto — return not implemented
+	writeError(w, 501, "not implemented")
 }
 
 func (h *Handlers) AdminListChapters(w http.ResponseWriter, r *http.Request) {
-	all := h.Store.ListAllChapters()
-	writeJSON(w, 200, map[string]interface{}{"chapters": all, "total": len(all)})
+	// Return all chapters across all novels
+	novelsResp, _ := h.Clients.Novel.ListNovels(r.Context(), &novelv1.ListNovelsRequest{Page: 1, PageSize: 100})
+	var allChapters []interface{}
+	if novelsResp != nil {
+		for _, novel := range novelsResp.Novels {
+			chResp, err := h.Clients.Novel.ListChapters(r.Context(), &novelv1.ListChaptersRequest{
+				NovelId: novel.Id, Page: 1, PageSize: 500,
+			})
+			if err == nil {
+				for _, ch := range chResp.Chapters {
+					allChapters = append(allChapters, map[string]interface{}{
+						"chapter":     ch,
+						"novel_title": novel.Title,
+					})
+				}
+			}
+		}
+	}
+	writeJSON(w, 200, map[string]interface{}{"chapters": allChapters, "total": len(allChapters)})
 }
 
 func (h *Handlers) AdminListUsers(w http.ResponseWriter, r *http.Request) {
-	users := h.Store.ListUsers()
-	writeJSON(w, 200, map[string]interface{}{"users": users, "total": len(users)})
+	// User listing not in proto — return empty for now
+	writeJSON(w, 200, map[string]interface{}{"users": []interface{}{}, "total": 0})
 }
 
 func (h *Handlers) AdminUpdateUserRole(w http.ResponseWriter, r *http.Request) {
-	var req struct{ Role string `json:"role"` }
-	readJSON(r, &req)
-	if err := h.Store.UpdateUserRole(chi.URLParam(r, "id"), req.Role); err != nil {
-		writeError(w, 404, err.Error())
-		return
-	}
-	writeJSON(w, 200, map[string]string{"status": "updated"})
-}
-
-func (h *Handlers) ListGenres(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, 200, map[string]interface{}{"genres": h.Store.GetGenres()})
+	writeError(w, 501, "not implemented")
 }

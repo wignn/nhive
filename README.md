@@ -17,13 +17,14 @@ A microservice-based novel reading platform built with Go, Rust, gRPC, and moder
 
 | Component | Technology |
 |-----------|-----------|
-| Languages | Go 1.22+, Rust 1.77+ |
+| Languages | Go 1.24+, Rust 1.77+ |
 | Frontend | Next.js 15, Vanilla CSS |
 | Communication | gRPC (internal), REST (external) |
 | Event Bus | NATS JetStream |
 | Database | PostgreSQL 16 |
 | Cache | Redis 7 |
 | Search | Elasticsearch 8.13 |
+| Logging | Zap (Go), tracing-subscriber (Rust) |
 | Containers | Docker, Docker Compose |
 
 ## Quick Start
@@ -32,7 +33,7 @@ A microservice-based novel reading platform built with Go, Rust, gRPC, and moder
 # Start all infrastructure and services
 make dev
 
-# View logs
+# View logs (structured JSON in production)
 make logs
 
 # Stop everything
@@ -40,7 +41,33 @@ make down
 
 # Stop and clean volumes
 make clean
+
+# Tidy all Go modules
+make tidy
 ```
+
+## Observability
+
+All services emit **structured JSON logs** in production mode:
+
+```json
+{
+  "level": "info",
+  "ts": "2026-04-29T12:00:00Z",
+  "caller": "server/main.go:45",
+  "msg": "user-service started",
+  "service": "user-service",
+  "port": "50051"
+}
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `APP_ENV` | `production` for JSON logs, `development` for console | `development` |
+| `LOG_LEVEL` | Log level: `debug`, `info`, `warn`, `error` | `info` |
+| `RUST_LOG` | Rust log filter (e.g., `search_service=info`) | — |
 
 ## API Endpoints
 
@@ -62,17 +89,71 @@ Base URL: `http://localhost:8080/api/v1`
 ## Project Structure
 
 ```
-n/
-├── proto/              # Shared Protobuf definitions
-├── gateway/            # [Go] API Gateway
-├── user-service/       # [Go] Auth & Users
-├── novel-service/      # [Go] Novels & Chapters
-├── content-service/    # [Rust] Content Delivery
-├── search-service/     # [Rust] Search Engine
-├── comment-service/    # [Go] Comments
-├── library-service/    # [Go] Library & Progress
-├── frontend/           # [Next.js] Web UI
-├── scripts/            # DB init, seed data
+novelhive/
+├── pkg/                        # Shared Go packages
+│   ├── logger/                 #   Structured logging (zap)
+│   ├── config/                 #   Config helpers (GetEnv, MustEnv)
+│   └── grpclog/                #   gRPC logging interceptor
+├── proto/                      # Shared Protobuf definitions
+├── gateway/                    # [Go] API Gateway
+│   ├── cmd/gateway/main.go
+│   ├── internal/
+│   │   ├── clients/
+│   │   ├── config/
+│   │   ├── handler/
+│   │   ├── middleware/
+│   │   ├── storage/
+│   │   └── store/
+│   └── Dockerfile
+├── user-service/               # [Go] Auth & Users
+│   ├── cmd/server/main.go
+│   ├── internal/
+│   │   ├── config/
+│   │   ├── domain/
+│   │   ├── grpc/
+│   │   ├── repository/
+│   │   └── usecase/
+│   └── Dockerfile
+├── novel-service/              # [Go] Novels & Chapters
+│   ├── cmd/server/main.go
+│   ├── internal/
+│   │   ├── domain/
+│   │   ├── events/
+│   │   ├── grpc/
+│   │   ├── repository/
+│   │   └── usecase/
+│   └── Dockerfile
+├── comment-service/            # [Go] Comments
+│   ├── cmd/server/main.go
+│   ├── internal/
+│   │   ├── domain/
+│   │   ├── grpc/
+│   │   └── repository/
+│   └── Dockerfile
+├── library-service/            # [Go] Library & Progress
+│   ├── cmd/server/main.go
+│   ├── internal/
+│   │   ├── domain/
+│   │   ├── grpc/
+│   │   └── repository/
+│   └── Dockerfile
+├── content-service/            # [Rust] Content Delivery
+│   ├── crates/
+│   │   ├── domain/
+│   │   ├── grpc-server/
+│   │   └── storage/
+│   ├── Cargo.toml
+│   └── Dockerfile
+├── search-service/             # [Rust] Search Engine
+│   ├── crates/
+│   │   ├── domain/
+│   │   ├── grpc-server/
+│   │   ├── indexer/
+│   │   └── subscriber/
+│   ├── Cargo.toml
+│   └── Dockerfile
+├── frontend/                   # [Next.js] Web UI
+├── scripts/                    # DB init, seed data
 ├── docker-compose.yml
 └── Makefile
 ```
