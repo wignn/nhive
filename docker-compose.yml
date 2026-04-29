@@ -67,6 +67,7 @@ services:
       context: .
       dockerfile: user-service/Dockerfile
     container_name: novelhive-user-service
+    image: wign/nhive-user-service
     restart: unless-stopped
     depends_on:
       postgres:
@@ -88,6 +89,7 @@ services:
       context: .
       dockerfile: novel-service/Dockerfile
     container_name: novelhive-novel-service
+    image: wign/nhive-novel-service
     restart: unless-stopped
     depends_on:
       postgres:
@@ -111,6 +113,7 @@ services:
       context: .
       dockerfile: content-service/Dockerfile
     container_name: novelhive-content-service
+    image: wign/nhive-novel-service
     restart: unless-stopped
     depends_on:
       postgres:
@@ -131,6 +134,7 @@ services:
       context: .
       dockerfile: search-service/Dockerfile
     container_name: novelhive-search-service
+    image: wign/nhive-search-service
     restart: unless-stopped
     depends_on:
       elasticsearch:
@@ -154,6 +158,7 @@ services:
       context: .
       dockerfile: comment-service/Dockerfile
     container_name: novelhive-comment-service
+    image: wign/nhive-comment-service
     restart: unless-stopped
     depends_on:
       postgres:
@@ -174,6 +179,7 @@ services:
       context: .
       dockerfile: library-service/Dockerfile
     container_name: novelhive-library-service
+    image: wign/nhive-library-service
     restart: unless-stopped
     depends_on:
       postgres:
@@ -191,6 +197,7 @@ services:
       context: .
       dockerfile: gateway/Dockerfile
     container_name: novelhive-gateway
+    image: wign/nhive-gateway
     restart: unless-stopped
     depends_on:
       - user-service
