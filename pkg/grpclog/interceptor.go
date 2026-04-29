@@ -37,7 +37,6 @@ func UnaryServerInterceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 			}
 		}()
 
-		// Execute the handler
 		resp, err = handler(ctx, req)
 
 		duration := time.Since(start)

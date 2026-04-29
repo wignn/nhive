@@ -10,7 +10,6 @@ mod service;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // Structured logging: JSON in production, pretty console in development
     let env = env::var("APP_ENV").unwrap_or_else(|_| "development".into());
     if env == "production" {
         fmt::Subscriber::builder()
@@ -59,9 +58,8 @@ async fn main() -> anyhow::Result<()> {
     let addr: SocketAddr = format!("0.0.0.0:{}", port).parse()?;
     tracing::info!(service = "content-service", %addr, "content-service listening");
 
-    // Register tonic-reflection service so clients can query reflection metadata.
     Server::builder()
-        .add_service(tonic_reflection::server::Builder::configure().build()?)
+        .add_service(tonic_reflection::server::Builder::configure().build_v1()?)
         .serve(addr)
         .await?;
 
