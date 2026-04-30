@@ -13,9 +13,10 @@ import (
 	grpcserver "github.com/novelhive/user-service/internal/grpc"
 	"github.com/novelhive/user-service/internal/repository"
 	"github.com/novelhive/user-service/internal/usecase"
-	userv1 "github.com/novelhive/proto/user/v1"
+	"github.com/novelhive/pkg/grpcauth"
 	"github.com/novelhive/pkg/grpclog"
 	"github.com/novelhive/pkg/logger"
+	userv1 "github.com/novelhive/proto/user/v1"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -48,7 +49,10 @@ func main() {
 	}
 
 	grpcSrv := grpc.NewServer(
-		grpc.UnaryInterceptor(grpclog.UnaryServerInterceptor(log)),
+		grpc.ChainUnaryInterceptor(
+			grpclog.UnaryServerInterceptor(log),
+			grpcauth.UnaryServerInterceptor(cfg.InternalAPIKey),
+		),
 	)
 	userv1.RegisterUserServiceServer(grpcSrv, grpcserver.NewUserServiceServer(userUC))
 	reflection.Register(grpcSrv)

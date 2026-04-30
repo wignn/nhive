@@ -6,6 +6,7 @@ require (
 	github.com/gosimple/slug v1.14.0
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/nats-io/nats.go v1.35.0
+	github.com/novelhive/pkg/grpcauth v0.0.0
 	github.com/novelhive/pkg/grpclog v0.0.0
 	github.com/novelhive/pkg/logger v0.0.0
 	github.com/novelhive/proto v0.0.0
@@ -35,6 +36,7 @@ require (
 )
 
 replace (
+	github.com/novelhive/pkg/grpcauth => ../pkg/grpcauth
 	github.com/novelhive/pkg/grpclog => ../pkg/grpclog
 	github.com/novelhive/pkg/logger => ../pkg/logger
 	github.com/novelhive/proto => ../proto

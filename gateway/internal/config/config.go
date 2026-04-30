@@ -3,8 +3,9 @@ package config
 import "os"
 
 type Config struct {
-	HTTPPort string
-	JWTSecret string
+	HTTPPort      string
+	JWTSecret     string
+	InternalAPIKey string
 
 	// gRPC service addresses
 	UserServiceAddr    string
@@ -23,8 +24,9 @@ type Config struct {
 
 func Load() *Config {
 	return &Config{
-		HTTPPort:  getEnv("HTTP_PORT", "8080"),
-		JWTSecret: getEnv("JWT_SECRET", "novelhive-dev-secret"),
+		HTTPPort:       getEnv("HTTP_PORT", "8080"),
+		JWTSecret:      getEnv("JWT_SECRET", "novelhive-dev-secret"),
+		InternalAPIKey: getEnv("INTERNAL_API_KEY", ""),
 
 		UserServiceAddr:    getEnv("USER_SERVICE_ADDR", "localhost:50051"),
 		NovelServiceAddr:   getEnv("NOVEL_SERVICE_ADDR", "localhost:50052"),
@@ -46,3 +48,4 @@ func getEnv(key, fallback string) string {
 	}
 	return fallback
 }
+

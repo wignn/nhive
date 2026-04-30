@@ -49,10 +49,12 @@ func main() {
 		cfg.NovelServiceAddr,
 		cfg.CommentServiceAddr,
 		cfg.LibraryServiceAddr,
+		cfg.InternalAPIKey,
 	)
 	defer svcClients.Close()
 
 	h := handler.New(svcClients, cfg.JWTSecret, r2Client)
+
 
 	r := chi.NewRouter()
 
@@ -61,10 +63,13 @@ func main() {
 	r.Use(chimw.Recoverer)
 	r.Use(chimw.RealIP)
 	r.Use(middleware.SecurityHeaders)
+	// API key validation — must come before JWT auth.
+	// Key is injected by the Next.js server-side proxy, never visible in browser.
+	r.Use(middleware.APIKeyMiddleware(cfg.InternalAPIKey))
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:5173", "https://*.novelhive.com"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Internal-Key"},
 		ExposedHeaders:   []string{"Link", "X-Request-Id"},
 		AllowCredentials: true,
 		MaxAge:           300,

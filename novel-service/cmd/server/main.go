@@ -10,13 +10,14 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
+	"github.com/novelhive/pkg/grpcauth"
+	"github.com/novelhive/pkg/grpclog"
+	"github.com/novelhive/pkg/logger"
 	grpcserver "github.com/novelhive/novel-service/internal/grpc"
 	"github.com/novelhive/novel-service/internal/events"
 	"github.com/novelhive/novel-service/internal/repository"
 	"github.com/novelhive/novel-service/internal/usecase"
 	novelv1 "github.com/novelhive/proto/novel/v1"
-	"github.com/novelhive/pkg/grpclog"
-	"github.com/novelhive/pkg/logger"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -66,13 +67,18 @@ func main() {
 	genreRepo := repository.NewPostgresGenreRepo(pool)
 	novelUC := usecase.NewNovelUsecase(novelRepo, chapterRepo, genreRepo, cache, publisher)
 
+	apiKey := getEnv("INTERNAL_API_KEY", "")
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", grpcPort))
 	if err != nil {
 		log.Fatal("failed to listen", zap.String("port", grpcPort), zap.Error(err))
 	}
 
 	grpcSrv := grpc.NewServer(
-		grpc.UnaryInterceptor(grpclog.UnaryServerInterceptor(log)),
+		grpc.ChainUnaryInterceptor(
+			grpclog.UnaryServerInterceptor(log),
+			grpcauth.UnaryServerInterceptor(apiKey),
+		),
 	)
 	novelv1.RegisterNovelServiceServer(grpcSrv, grpcserver.NewNovelServiceServer(novelUC))
 	reflection.Register(grpcSrv)

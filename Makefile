@@ -91,6 +91,7 @@ tidy:
 	cd pkg/logger && go mod tidy
 	cd pkg/config && go mod tidy
 	cd pkg/grpclog && go mod tidy
+	cd pkg/grpcauth && go mod tidy
 	cd gateway && go mod tidy
 	cd user-service && go mod tidy
 	cd novel-service && go mod tidy

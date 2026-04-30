@@ -9,12 +9,13 @@ import (
 	"syscall"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/novelhive/pkg/grpcauth"
+	"github.com/novelhive/pkg/grpclog"
+	"github.com/novelhive/pkg/logger"
 	grpcserver "github.com/novelhive/comment-service/internal/grpc"
 	"github.com/novelhive/comment-service/internal/repository"
 	commentv1 "github.com/novelhive/proto/comment/v1"
 	userv1 "github.com/novelhive/proto/user/v1"
-	"github.com/novelhive/pkg/grpclog"
-	"github.com/novelhive/pkg/logger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -28,6 +29,7 @@ func main() {
 	dbURL := getEnv("DATABASE_URL", "postgres://novelhive:secret@localhost:5432/novelhive_comments?sslmode=disable")
 	grpcPort := getEnv("GRPC_PORT", "50055")
 	userServiceAddr := getEnv("USER_SERVICE_ADDR", "localhost:50051")
+	apiKey := getEnv("INTERNAL_API_KEY", "")
 
 	log.Info("connecting to database")
 	pool, err := pgxpool.New(context.Background(), dbURL)
@@ -39,9 +41,13 @@ func main() {
 	log.Info("running database migrations")
 	runMigrations(pool)
 
-	// Connect to user-service for profile resolution
+	// Connect to user-service for profile resolution (inject internal key)
 	var userClient userv1.UserServiceClient
-	if conn, err := grpc.NewClient(userServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials())); err == nil {
+	userDialOpts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithPerRPCCredentials(grpcauth.NewCredentials(apiKey)),
+	}
+	if conn, err := grpc.NewClient(userServiceAddr, userDialOpts...); err == nil {
 		userClient = userv1.NewUserServiceClient(conn)
 		log.Info("connected to user-service", zap.String("addr", userServiceAddr))
 	} else {
@@ -57,7 +63,10 @@ func main() {
 	}
 
 	grpcSrv := grpc.NewServer(
-		grpc.UnaryInterceptor(grpclog.UnaryServerInterceptor(log)),
+		grpc.ChainUnaryInterceptor(
+			grpclog.UnaryServerInterceptor(log),
+			grpcauth.UnaryServerInterceptor(apiKey),
+		),
 	)
 	commentv1.RegisterCommentServiceServer(grpcSrv, grpcserver.NewCommentServiceServer(commentRepo, likeRepo, userClient, log))
 	reflection.Register(grpcSrv)

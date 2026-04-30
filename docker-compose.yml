@@ -69,6 +69,8 @@ services:
     container_name: novelhive-user-service
     image: wign/nhive-user-service
     restart: unless-stopped
+    networks:
+      - novelhive-net
     depends_on:
       postgres:
         condition: service_healthy
@@ -79,10 +81,10 @@ services:
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET: novelhive-super-secret-key-change-in-production
       GRPC_PORT: "50051"
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       APP_ENV: production
       LOG_LEVEL: info
-    ports:
-      - "50051:50051"
+    # Port 50051 NOT published to host — only reachable inside novelhive-net
 
   novel-service:
     build:
@@ -91,6 +93,8 @@ services:
     container_name: novelhive-novel-service
     image: wign/nhive-novel-service
     restart: unless-stopped
+    networks:
+      - novelhive-net
     depends_on:
       postgres:
         condition: service_healthy
@@ -103,18 +107,20 @@ services:
       REDIS_URL: redis://redis:6379/1
       NATS_URL: nats://nats:4222
       GRPC_PORT: "50052"
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       APP_ENV: production
       LOG_LEVEL: info
-    ports:
-      - "50052:50052"
+    # Port 50052 NOT published to host
 
   content-service:
     build:
       context: .
       dockerfile: content-service/Dockerfile
     container_name: novelhive-content-service
-    image: wign/nhive-novel-service
+    image: wign/nhive-content-service
     restart: unless-stopped
+    networks:
+      - novelhive-net
     depends_on:
       postgres:
         condition: service_healthy
@@ -126,8 +132,7 @@ services:
       GRPC_PORT: "50053"
       APP_ENV: production
       RUST_LOG: content_service=info
-    ports:
-      - "50053:50053"
+    # Port 50053 NOT published to host
 
   search-service:
     build:
@@ -136,6 +141,8 @@ services:
     container_name: novelhive-search-service
     image: wign/nhive-search-service
     restart: unless-stopped
+    networks:
+      - novelhive-net
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -150,8 +157,7 @@ services:
       GRPC_PORT: "50054"
       APP_ENV: production
       RUST_LOG: search_service=info
-    ports:
-      - "50054:50054"
+    # Port 50054 NOT published to host
 
   comment-service:
     build:
@@ -160,6 +166,8 @@ services:
     container_name: novelhive-comment-service
     image: wign/nhive-comment-service
     restart: unless-stopped
+    networks:
+      - novelhive-net
     depends_on:
       postgres:
         condition: service_healthy
@@ -169,10 +177,10 @@ services:
       DATABASE_URL: postgres://novelhive:secret@postgres:5432/novelhive_comments?sslmode=disable
       GRPC_PORT: "50055"
       USER_SERVICE_ADDR: user-service:50051
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       APP_ENV: production
       LOG_LEVEL: info
-    ports:
-      - "50055:50055"
+    # Port 50055 NOT published to host
 
   library-service:
     build:
@@ -181,16 +189,18 @@ services:
     container_name: novelhive-library-service
     image: wign/nhive-library-service
     restart: unless-stopped
+    networks:
+      - novelhive-net
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://novelhive:secret@postgres:5432/novelhive_library?sslmode=disable
       GRPC_PORT: "50056"
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       APP_ENV: production
       LOG_LEVEL: info
-    ports:
-      - "50056:50056"
+    # Port 50056 NOT published to host
 
   gateway:
     build:
@@ -199,6 +209,8 @@ services:
     container_name: novelhive-gateway
     image: wign/nhive-gateway
     restart: unless-stopped
+    networks:
+      - novelhive-net
     depends_on:
       - user-service
       - novel-service
@@ -211,10 +223,11 @@ services:
       NOVEL_SERVICE_ADDR: novel-service:50052
       COMMENT_SERVICE_ADDR: comment-service:50055
       LIBRARY_SERVICE_ADDR: library-service:50056
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       APP_ENV: production
       LOG_LEVEL: info
     ports:
-      - "8080:8080"
+      - "8080:8080"  # Only the gateway is exposed to the outside world
 
   # frontend:
   #   build:
@@ -233,3 +246,7 @@ volumes:
   redisdata:
   esdata:
   natsdata:
+
+networks:
+  novelhive-net:
+    driver: bridge

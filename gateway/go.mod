@@ -11,6 +11,7 @@ require (
 	github.com/go-chi/cors v1.2.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/joho/godotenv v1.5.1
+	github.com/novelhive/pkg/grpcauth v0.0.0
 	github.com/novelhive/pkg/logger v0.0.0
 	github.com/novelhive/proto v0.0.0
 	go.uber.org/zap v1.27.0
@@ -42,6 +43,7 @@ require (
 )
 
 replace (
+	github.com/novelhive/pkg/grpcauth => ../pkg/grpcauth
 	github.com/novelhive/pkg/logger => ../pkg/logger
 	github.com/novelhive/proto => ../proto
 )

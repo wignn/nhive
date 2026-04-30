@@ -9,11 +9,12 @@ import (
 	"syscall"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/novelhive/pkg/grpcauth"
+	"github.com/novelhive/pkg/grpclog"
+	"github.com/novelhive/pkg/logger"
 	grpcserver "github.com/novelhive/library-service/internal/grpc"
 	"github.com/novelhive/library-service/internal/repository"
 	libraryv1 "github.com/novelhive/proto/library/v1"
-	"github.com/novelhive/pkg/grpclog"
-	"github.com/novelhive/pkg/logger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -25,6 +26,7 @@ func main() {
 
 	dbURL := getEnv("DATABASE_URL", "postgres://novelhive:secret@localhost:5432/novelhive_library?sslmode=disable")
 	grpcPort := getEnv("GRPC_PORT", "50056")
+	apiKey := getEnv("INTERNAL_API_KEY", "")
 
 	log.Info("connecting to database")
 	pool, err := pgxpool.New(context.Background(), dbURL)
@@ -46,7 +48,10 @@ func main() {
 	}
 
 	grpcSrv := grpc.NewServer(
-		grpc.UnaryInterceptor(grpclog.UnaryServerInterceptor(log)),
+		grpc.ChainUnaryInterceptor(
+			grpclog.UnaryServerInterceptor(log),
+			grpcauth.UnaryServerInterceptor(apiKey),
+		),
 	)
 	libraryv1.RegisterLibraryServiceServer(grpcSrv, grpcserver.NewLibraryServiceServer(libraryRepo, bookmarkRepo, progressRepo, log))
 	reflection.Register(grpcSrv)
