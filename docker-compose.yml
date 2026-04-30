@@ -85,7 +85,7 @@ services:
       redis:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://novelhive:change_me}@postgres:5432/novelhive_users?sslmode=disable
+      DATABASE_URL: postgres://novelhive:change_me@postgres:5432/novelhive_users?sslmode=disable
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET: novelhive-super-secret-key-change-in-production
       GRPC_PORT: "50051"
