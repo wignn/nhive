@@ -85,7 +85,7 @@ services:
       redis:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://novelhive:${POSTGRES_PASSWORD}@postgres:5432/novelhive_users?sslmode=disable
+      DATABASE_URL: postgres://novelhive:change_me}@postgres:5432/novelhive_users?sslmode=disable
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET: novelhive-super-secret-key-change-in-production
       GRPC_PORT: "50051"
@@ -110,7 +110,7 @@ services:
       nats:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://novelhive:${POSTGRES_PASSWORD}@postgres:5432/novelhive_novels?sslmode=disable
+      DATABASE_URL: postgres://novelhive:change_me@postgres:5432/novelhive_novels?sslmode=disable
       REDIS_URL: redis://redis:6379/1
       NATS_URL: nats://nats:4222
       GRPC_PORT: "50052"
@@ -133,7 +133,7 @@ services:
       redis:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://novelhive:${POSTGRES_PASSWORD}@postgres:5432/novelhive_novels?sslmode=disable
+      DATABASE_URL: postgres://novelhive:change_me@postgres:5432/novelhive_novels?sslmode=disable
       REDIS_URL: redis://redis:6379/2
       GRPC_PORT: "50053"
       APP_ENV: production
@@ -178,7 +178,7 @@ services:
       user-service:
         condition: service_started
     environment:
-      DATABASE_URL: postgres://novelhive:${POSTGRES_PASSWORD}@postgres:5432/novelhive_comments?sslmode=disable
+      DATABASE_URL: postgres://novelhive:change_me@postgres:5432/novelhive_comments?sslmode=disable
       GRPC_PORT: "50055"
       USER_SERVICE_ADDR: user-service:50051
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
@@ -198,7 +198,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://novelhive:${POSTGRES_PASSWORD}@postgres:5432/novelhive_library?sslmode=disable
+      DATABASE_URL: postgres://novelhive:change_me@postgres:5432/novelhive_library?sslmode=disable
       GRPC_PORT: "50056"
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       APP_ENV: production
