@@ -59,7 +59,6 @@ func main() {
 
 	log.Info("user-service started", zap.String("port", cfg.GRPCPort))
 
-	// Graceful shutdown
 	go func() {
 		if err := grpcSrv.Serve(lis); err != nil {
 			log.Fatal("grpc serve failed", zap.Error(err))

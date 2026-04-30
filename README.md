@@ -1,4 +1,4 @@
-# NovelHive 📚
+# NovelHive
 
 A microservice-based novel reading platform built with Go, Rust, gRPC, and modern infrastructure.
 
@@ -17,7 +17,7 @@ A microservice-based novel reading platform built with Go, Rust, gRPC, and moder
 
 | Component | Technology |
 |-----------|-----------|
-| Languages | Go 1.24+, Rust 1.77+ |
+| Languages | Go 1.24+, Rust 1.85+ |
 | Frontend | Next.js 15, Vanilla CSS |
 | Communication | gRPC (internal), REST (external) |
 | Event Bus | NATS JetStream |
