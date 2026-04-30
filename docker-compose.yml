@@ -2,6 +2,8 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: novelhive-postgres
+    networks:
+      - novelhive-net
     environment:
       POSTGRES_DB: novelhive
       POSTGRES_USER: novelhive
@@ -20,6 +22,8 @@ services:
   redis:
     image: redis:7-alpine
     container_name: novelhive-redis
+    networks:
+      - novelhive-net
     ports:
       - "16379:6379"
     volumes:
@@ -33,6 +37,8 @@ services:
   elasticsearch:
     image: elasticsearch:8.13.0
     container_name: novelhive-elasticsearch
+    networks:
+      - novelhive-net
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -50,6 +56,8 @@ services:
   nats:
     image: nats:2-alpine
     container_name: novelhive-nats
+    networks:
+      - novelhive-net
     command: ["--jetstream", "--store_dir=/data", "-p", "4222", "-m", "8222"]
     ports:
       - "14222:4222"
@@ -84,7 +92,6 @@ services:
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       APP_ENV: production
       LOG_LEVEL: info
-    # Port 50051 NOT published to host — only reachable inside novelhive-net
 
   novel-service:
     build:
@@ -110,7 +117,6 @@ services:
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       APP_ENV: production
       LOG_LEVEL: info
-    # Port 50052 NOT published to host
 
   content-service:
     build:
@@ -132,7 +138,6 @@ services:
       GRPC_PORT: "50053"
       APP_ENV: production
       RUST_LOG: content_service=info
-    # Port 50053 NOT published to host
 
   search-service:
     build:
@@ -157,7 +162,6 @@ services:
       GRPC_PORT: "50054"
       APP_ENV: production
       RUST_LOG: search_service=info
-    # Port 50054 NOT published to host
 
   comment-service:
     build:
@@ -180,7 +184,6 @@ services:
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       APP_ENV: production
       LOG_LEVEL: info
-    # Port 50055 NOT published to host
 
   library-service:
     build:
@@ -200,7 +203,6 @@ services:
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       APP_ENV: production
       LOG_LEVEL: info
-    # Port 50056 NOT published to host
 
   gateway:
     build:
@@ -227,7 +229,7 @@ services:
       APP_ENV: production
       LOG_LEVEL: info
     ports:
-      - "8080:8080"  # Only the gateway is exposed to the outside world
+      - "8080:8080"  
 
   # frontend:
   #   build:
