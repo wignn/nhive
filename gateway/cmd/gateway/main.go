@@ -29,7 +29,6 @@ func main() {
 
 	cfg := config.Load()
 
-	// R2 image storage
 	r2Client, err := storage.NewR2Client(cfg)
 	if err != nil {
 		log.Warn("R2 Storage not configured", zap.Error(err))
@@ -43,6 +42,7 @@ func main() {
 		zap.String("comment_service", cfg.CommentServiceAddr),
 		zap.String("library_service", cfg.LibraryServiceAddr),
 	)
+
 	svcClients := clients.New(
 		cfg.UserServiceAddr,
 		cfg.NovelServiceAddr,
@@ -54,38 +54,32 @@ func main() {
 
 	h := handler.New(svcClients, cfg.JWTSecret, r2Client)
 
-
 	r := chi.NewRouter()
 
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	})
-
+	// Global middlewares — SEMUA harus sebelum routes
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
 	r.Use(chimw.RealIP)
 	r.Use(middleware.SecurityHeaders)
-
-	r.Use(middleware.APIKeyMiddleware(cfg.InternalAPIKey))
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:5173", "https://novel-hive.vercel.app"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Internal-Key"},
-		ExposedHeaders:   []string{"Link", "X-Request-Id"},
-		AllowCredentials: true,
-		MaxAge:           300,
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+		AllowCredentials: false,
 	}))
 
-	rl := middleware.NewRateLimiter(200)
-	r.Use(rl.Middleware)
+	// Health check
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"status":"ok","service":"novelhive-gateway","version":"2.0"}`))
+	})
 
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Post("/auth/register", h.Register)
-		r.Post("/auth/login", h.Login)
-		
+		// Public routes
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.OptionalAuth(cfg.JWTSecret))
+			r.Post("/auth/register", h.Register)
+			r.Post("/auth/login", h.Login)
+
 			r.Get("/novels", h.ListNovels)
 			r.Get("/novels/{slug}", h.GetNovel)
 			r.Get("/novels/{slug}/chapters", h.ListChapters)
@@ -99,6 +93,7 @@ func main() {
 		// Protected routes
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AuthMiddleware(cfg.JWTSecret))
+
 			r.Get("/auth/me", h.GetProfile)
 
 			r.Post("/chapters/{chapterId}/comments", h.CreateComment)
@@ -137,15 +132,9 @@ func main() {
 		})
 	})
 
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status":"ok","service":"novelhive-gateway","version":"2.0"}`))
-	})
-
 	addr := fmt.Sprintf(":%s", cfg.HTTPPort)
 	log.Info("gateway started", zap.String("addr", "http://localhost"+addr))
 
-	// Graceful shutdown
 	srv := &http.Server{Addr: addr, Handler: r}
 
 	go func() {
