@@ -37,7 +37,6 @@ func main() {
 		log.Info("R2 Storage initialized", zap.String("bucket", cfg.R2BucketName))
 	}
 
-	// gRPC clients to all microservices
 	log.Info("connecting to microservices",
 		zap.String("user_service", cfg.UserServiceAddr),
 		zap.String("novel_service", cfg.NovelServiceAddr),
@@ -58,16 +57,14 @@ func main() {
 
 	r := chi.NewRouter()
 
-	// Global middleware
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
 	r.Use(chimw.RealIP)
 	r.Use(middleware.SecurityHeaders)
-	// API key validation — must come before JWT auth.
-	// Key is injected by the Next.js server-side proxy, never visible in browser.
+
 	r.Use(middleware.APIKeyMiddleware(cfg.InternalAPIKey))
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:5173", "https://*.novelhive.com"},
+		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:5173", "https://novel-hive.vercel.app"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Internal-Key"},
 		ExposedHeaders:   []string{"Link", "X-Request-Id"},
