@@ -672,12 +672,10 @@ func (h *Handlers) AdminUpdateChapter(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) AdminDeleteChapter(w http.ResponseWriter, r *http.Request) {
-	// No delete chapter RPC in proto — return not implemented
 	writeError(w, 501, "not implemented")
 }
 
 func (h *Handlers) AdminListChapters(w http.ResponseWriter, r *http.Request) {
-	// Return all chapters across all novels
 	novelsResp, _ := h.Clients.Novel.ListNovels(r.Context(), &novelv1.ListNovelsRequest{Page: 1, PageSize: 100})
 	var allChapters []interface{}
 	if novelsResp != nil {
@@ -690,12 +688,44 @@ func (h *Handlers) AdminListChapters(w http.ResponseWriter, r *http.Request) {
 					allChapters = append(allChapters, map[string]interface{}{
 						"chapter":     ch,
 						"novel_title": novel.Title,
+						"novel_id":    novel.Id,
+						"novel_slug":  novel.Slug,
 					})
 				}
 			}
 		}
 	}
 	writeJSON(w, 200, map[string]interface{}{"chapters": allChapters, "total": len(allChapters)})
+}
+
+func (h *Handlers) AdminGetChapter(w http.ResponseWriter, r *http.Request) {
+	novelSlug := r.URL.Query().Get("novel_slug")
+	numberStr := r.URL.Query().Get("number")
+	if novelSlug == "" || numberStr == "" {
+		writeError(w, 400, "novel_slug and number are required")
+		return
+	}
+	num, err := strconv.Atoi(numberStr)
+	if err != nil {
+		writeError(w, 400, "invalid chapter number")
+		return
+	}
+	ch, err := h.Clients.Novel.GetChapter(r.Context(), &novelv1.GetChapterRequest{
+		NovelSlug:     novelSlug,
+		ChapterNumber: int32(num),
+	})
+	if err != nil {
+		writeError(w, 404, "chapter not found")
+		return
+	}
+	writeJSON(w, 200, map[string]interface{}{
+		"id":         ch.Id,
+		"novel_id":   ch.NovelId,
+		"number":     ch.Number,
+		"title":      ch.Title,
+		"content":    ch.Content,
+		"word_count": ch.WordCount,
+	})
 }
 
 func (h *Handlers) AdminListUsers(w http.ResponseWriter, r *http.Request) {

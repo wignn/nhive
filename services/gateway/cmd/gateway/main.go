@@ -123,6 +123,7 @@ func main() {
 			r.Delete("/admin/novels/{id}", h.AdminDeleteNovel)
 
 			r.Get("/admin/chapters", h.AdminListChapters)
+			r.Get("/admin/chapters/single", h.AdminGetChapter)
 			r.Post("/admin/chapters", h.AdminCreateChapter)
 			r.Put("/admin/chapters/{id}", h.AdminUpdateChapter)
 			r.Delete("/admin/chapters/{id}", h.AdminDeleteChapter)
