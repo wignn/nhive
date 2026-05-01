@@ -167,6 +167,11 @@ func (uc *NovelUsecase) UpdateChapter(id, title, content string) (*domain.Chapte
 	if err := uc.chapterRepo.Update(ch); err != nil {
 		return nil, err
 	}
+	if uc.cache != nil {
+		if novel, err := uc.novelRepo.GetByID(ch.NovelID); err == nil {
+			uc.cache.InvalidateChapter(novel.Slug, ch.Number)
+		}
+	}
 	return ch, nil
 }
 
@@ -181,7 +186,6 @@ func (uc *NovelUsecase) DeleteChapter(id string) error {
 		return err
 	}
 
-	// Update novel total chapters
 	count, _ := uc.chapterRepo.CountByNovelID(ch.NovelID)
 	if novel, err := uc.novelRepo.GetByID(ch.NovelID); err == nil {
 		novel.TotalChapters = count
@@ -189,6 +193,7 @@ func (uc *NovelUsecase) DeleteChapter(id string) error {
 		uc.novelRepo.Update(novel)
 		if uc.cache != nil {
 			uc.cache.InvalidateNovel(novel.Slug)
+			uc.cache.InvalidateChapter(novel.Slug, ch.Number)
 		}
 	}
 	return nil
