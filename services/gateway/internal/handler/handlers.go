@@ -583,9 +583,17 @@ func (h *Handlers) GetLibraryEntry(w http.ResponseWriter, r *http.Request) {
 		progress = p.ChapterNumber
 	}
 
+	entryJSON := map[string]interface{}{
+		"id":         entry.Id,
+		"user_id":    entry.UserId,
+		"novel_id":   entry.NovelId,
+		"status":     entry.Status,
+		"created_at": entry.CreatedAt,
+	}
+
 	writeJSON(w, 200, map[string]interface{}{
 		"in_library":     true,
-		"entry":          entry,
+		"entry":          entryJSON,
 		"novel":          novel,
 		"progress":       progress,
 		"cover_base_url": h.r2BaseURL(),
