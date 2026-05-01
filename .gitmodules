@@ -6,6 +6,6 @@
 	path = apps/desktop
 	url = https://github.com/wignn/nhive-desktop.git
 
-[submodule "apps/frontend"]
-	path = apps/frontend
+[submodule "web"]
+	path = apps/web
 	url = https://github.com/wignn/nhive-web.git
