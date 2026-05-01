@@ -19,19 +19,19 @@ jobs:
       matrix:
         include:
           - image: nhive-user-service
-            dockerfile: user-service/Dockerfile
+            dockerfile: services/user-service/Dockerfile
           - image: nhive-search-service
-            dockerfile: search-service/Dockerfile
+            dockerfile: services/search-service/Dockerfile
           - image: nhive-novel-service
-            dockerfile: novel-service/Dockerfile
+            dockerfile: services/novel-service/Dockerfile
           - image: nhive-library-service
-            dockerfile: library-service/Dockerfile
+            dockerfile: services/library-service/Dockerfile
           - image: nhive-gateway
-            dockerfile: gateway/Dockerfile
+            dockerfile: services/gateway/Dockerfile
           - image: nhive-content-service
-            dockerfile: content-service/Dockerfile
+            dockerfile: services/content-service/Dockerfile
           - image: nhive-comment-service
-            dockerfile: comment-service/Dockerfile
+            dockerfile: services/comment-service/Dockerfile
 
     steps:
       - name: Check out repository
