@@ -9,6 +9,8 @@ service UserService {
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc GetProfile(GetProfileRequest) returns (UserProfile);
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+  rpc UpdateUserRole(UpdateUserRoleRequest) returns (UpdateUserRoleResponse);
 }
 
 message RegisterRequest {
@@ -54,4 +56,24 @@ message UserProfile {
   string avatar_url = 4;
   string role = 5;
   string created_at = 6;
+}
+
+message ListUsersRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+message ListUsersResponse {
+  repeated UserProfile users = 1;
+  int32 total = 2;
+}
+
+// role must be one of: "admin", "reader"
+message UpdateUserRoleRequest {
+  string user_id = 1;
+  string role = 2;
+}
+
+message UpdateUserRoleResponse {
+  bool success = 1;
 }

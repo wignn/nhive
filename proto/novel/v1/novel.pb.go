@@ -1189,6 +1189,138 @@ func (x *ListGenresResponse) GetGenres() []*Genre {
 	return nil
 }
 
+type CreateGenreRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateGenreRequest) Reset() {
+	*x = CreateGenreRequest{}
+	mi := &file_proto_novel_v1_novel_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateGenreRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateGenreRequest) ProtoMessage() {}
+
+func (x *CreateGenreRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_novel_v1_novel_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateGenreRequest.ProtoReflect.Descriptor instead.
+func (*CreateGenreRequest) Descriptor() ([]byte, []int) {
+	return file_proto_novel_v1_novel_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *CreateGenreRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type DeleteGenreRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteGenreRequest) Reset() {
+	*x = DeleteGenreRequest{}
+	mi := &file_proto_novel_v1_novel_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteGenreRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteGenreRequest) ProtoMessage() {}
+
+func (x *DeleteGenreRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_novel_v1_novel_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteGenreRequest.ProtoReflect.Descriptor instead.
+func (*DeleteGenreRequest) Descriptor() ([]byte, []int) {
+	return file_proto_novel_v1_novel_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *DeleteGenreRequest) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+type DeleteGenreResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteGenreResponse) Reset() {
+	*x = DeleteGenreResponse{}
+	mi := &file_proto_novel_v1_novel_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteGenreResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteGenreResponse) ProtoMessage() {}
+
+func (x *DeleteGenreResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_novel_v1_novel_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteGenreResponse.ProtoReflect.Descriptor instead.
+func (*DeleteGenreResponse) Descriptor() ([]byte, []int) {
+	return file_proto_novel_v1_novel_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *DeleteGenreResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
 var File_proto_novel_v1_novel_proto protoreflect.FileDescriptor
 
 const file_proto_novel_v1_novel_proto_rawDesc = "" +
@@ -1285,7 +1417,13 @@ const file_proto_novel_v1_novel_proto_rawDesc = "" +
 	"\acontent\x18\x03 \x01(\tR\acontent\"\x13\n" +
 	"\x11ListGenresRequest\"=\n" +
 	"\x12ListGenresResponse\x12'\n" +
-	"\x06genres\x18\x01 \x03(\v2\x0f.novel.v1.GenreR\x06genres2\xb5\x05\n" +
+	"\x06genres\x18\x01 \x03(\v2\x0f.novel.v1.GenreR\x06genres\"(\n" +
+	"\x12CreateGenreRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"$\n" +
+	"\x12DeleteGenreRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\"/\n" +
+	"\x13DeleteGenreResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xbf\x06\n" +
 	"\fNovelService\x126\n" +
 	"\bGetNovel\x12\x19.novel.v1.GetNovelRequest\x1a\x0f.novel.v1.Novel\x12G\n" +
 	"\n" +
@@ -1299,7 +1437,9 @@ const file_proto_novel_v1_novel_proto_rawDesc = "" +
 	"\rCreateChapter\x12\x1e.novel.v1.CreateChapterRequest\x1a\x11.novel.v1.Chapter\x12B\n" +
 	"\rUpdateChapter\x12\x1e.novel.v1.UpdateChapterRequest\x1a\x11.novel.v1.Chapter\x12G\n" +
 	"\n" +
-	"ListGenres\x12\x1b.novel.v1.ListGenresRequest\x1a\x1c.novel.v1.ListGenresResponseB-Z+github.com/novelhive/proto/novel/v1;novelv1b\x06proto3"
+	"ListGenres\x12\x1b.novel.v1.ListGenresRequest\x1a\x1c.novel.v1.ListGenresResponse\x12<\n" +
+	"\vCreateGenre\x12\x1c.novel.v1.CreateGenreRequest\x1a\x0f.novel.v1.Genre\x12J\n" +
+	"\vDeleteGenre\x12\x1c.novel.v1.DeleteGenreRequest\x1a\x1d.novel.v1.DeleteGenreResponseB-Z+github.com/novelhive/proto/novel/v1;novelv1b\x06proto3"
 
 var (
 	file_proto_novel_v1_novel_proto_rawDescOnce sync.Once
@@ -1313,7 +1453,7 @@ func file_proto_novel_v1_novel_proto_rawDescGZIP() []byte {
 	return file_proto_novel_v1_novel_proto_rawDescData
 }
 
-var file_proto_novel_v1_novel_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_proto_novel_v1_novel_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_proto_novel_v1_novel_proto_goTypes = []any{
 	(*Novel)(nil),                // 0: novel.v1.Novel
 	(*Genre)(nil),                // 1: novel.v1.Genre
@@ -1333,6 +1473,9 @@ var file_proto_novel_v1_novel_proto_goTypes = []any{
 	(*UpdateChapterRequest)(nil), // 15: novel.v1.UpdateChapterRequest
 	(*ListGenresRequest)(nil),    // 16: novel.v1.ListGenresRequest
 	(*ListGenresResponse)(nil),   // 17: novel.v1.ListGenresResponse
+	(*CreateGenreRequest)(nil),   // 18: novel.v1.CreateGenreRequest
+	(*DeleteGenreRequest)(nil),   // 19: novel.v1.DeleteGenreRequest
+	(*DeleteGenreResponse)(nil),  // 20: novel.v1.DeleteGenreResponse
 }
 var file_proto_novel_v1_novel_proto_depIdxs = []int32{
 	1,  // 0: novel.v1.Novel.genres:type_name -> novel.v1.Genre
@@ -1349,18 +1492,22 @@ var file_proto_novel_v1_novel_proto_depIdxs = []int32{
 	14, // 11: novel.v1.NovelService.CreateChapter:input_type -> novel.v1.CreateChapterRequest
 	15, // 12: novel.v1.NovelService.UpdateChapter:input_type -> novel.v1.UpdateChapterRequest
 	16, // 13: novel.v1.NovelService.ListGenres:input_type -> novel.v1.ListGenresRequest
-	0,  // 14: novel.v1.NovelService.GetNovel:output_type -> novel.v1.Novel
-	5,  // 15: novel.v1.NovelService.ListNovels:output_type -> novel.v1.ListNovelsResponse
-	0,  // 16: novel.v1.NovelService.CreateNovel:output_type -> novel.v1.Novel
-	0,  // 17: novel.v1.NovelService.UpdateNovel:output_type -> novel.v1.Novel
-	9,  // 18: novel.v1.NovelService.DeleteNovel:output_type -> novel.v1.DeleteNovelResponse
-	2,  // 19: novel.v1.NovelService.GetChapter:output_type -> novel.v1.Chapter
-	12, // 20: novel.v1.NovelService.ListChapters:output_type -> novel.v1.ListChaptersResponse
-	2,  // 21: novel.v1.NovelService.CreateChapter:output_type -> novel.v1.Chapter
-	2,  // 22: novel.v1.NovelService.UpdateChapter:output_type -> novel.v1.Chapter
-	17, // 23: novel.v1.NovelService.ListGenres:output_type -> novel.v1.ListGenresResponse
-	14, // [14:24] is the sub-list for method output_type
-	4,  // [4:14] is the sub-list for method input_type
+	18, // 14: novel.v1.NovelService.CreateGenre:input_type -> novel.v1.CreateGenreRequest
+	19, // 15: novel.v1.NovelService.DeleteGenre:input_type -> novel.v1.DeleteGenreRequest
+	0,  // 16: novel.v1.NovelService.GetNovel:output_type -> novel.v1.Novel
+	5,  // 17: novel.v1.NovelService.ListNovels:output_type -> novel.v1.ListNovelsResponse
+	0,  // 18: novel.v1.NovelService.CreateNovel:output_type -> novel.v1.Novel
+	0,  // 19: novel.v1.NovelService.UpdateNovel:output_type -> novel.v1.Novel
+	9,  // 20: novel.v1.NovelService.DeleteNovel:output_type -> novel.v1.DeleteNovelResponse
+	2,  // 21: novel.v1.NovelService.GetChapter:output_type -> novel.v1.Chapter
+	12, // 22: novel.v1.NovelService.ListChapters:output_type -> novel.v1.ListChaptersResponse
+	2,  // 23: novel.v1.NovelService.CreateChapter:output_type -> novel.v1.Chapter
+	2,  // 24: novel.v1.NovelService.UpdateChapter:output_type -> novel.v1.Chapter
+	17, // 25: novel.v1.NovelService.ListGenres:output_type -> novel.v1.ListGenresResponse
+	1,  // 26: novel.v1.NovelService.CreateGenre:output_type -> novel.v1.Genre
+	20, // 27: novel.v1.NovelService.DeleteGenre:output_type -> novel.v1.DeleteGenreResponse
+	16, // [16:28] is the sub-list for method output_type
+	4,  // [4:16] is the sub-list for method input_type
 	4,  // [4:4] is the sub-list for extension type_name
 	4,  // [4:4] is the sub-list for extension extendee
 	0,  // [0:4] is the sub-list for field type_name
@@ -1377,7 +1524,7 @@ func file_proto_novel_v1_novel_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_novel_v1_novel_proto_rawDesc), len(file_proto_novel_v1_novel_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

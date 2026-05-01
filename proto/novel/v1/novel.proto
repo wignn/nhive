@@ -15,6 +15,8 @@ service NovelService {
   rpc CreateChapter(CreateChapterRequest) returns (Chapter);
   rpc UpdateChapter(UpdateChapterRequest) returns (Chapter);
   rpc ListGenres(ListGenresRequest) returns (ListGenresResponse);
+  rpc CreateGenre(CreateGenreRequest) returns (Genre);
+  rpc DeleteGenre(DeleteGenreRequest) returns (DeleteGenreResponse);
 }
 
 message Novel {
@@ -133,4 +135,16 @@ message ListGenresRequest {}
 
 message ListGenresResponse {
   repeated Genre genres = 1;
+}
+
+message CreateGenreRequest {
+  string name = 1;
+}
+
+message DeleteGenreRequest {
+  int32 id = 1;
+}
+
+message DeleteGenreResponse {
+  bool success = 1;
 }

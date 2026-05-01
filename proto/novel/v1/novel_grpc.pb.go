@@ -29,6 +29,8 @@ const (
 	NovelService_CreateChapter_FullMethodName = "/novel.v1.NovelService/CreateChapter"
 	NovelService_UpdateChapter_FullMethodName = "/novel.v1.NovelService/UpdateChapter"
 	NovelService_ListGenres_FullMethodName    = "/novel.v1.NovelService/ListGenres"
+	NovelService_CreateGenre_FullMethodName   = "/novel.v1.NovelService/CreateGenre"
+	NovelService_DeleteGenre_FullMethodName   = "/novel.v1.NovelService/DeleteGenre"
 )
 
 // NovelServiceClient is the client API for NovelService service.
@@ -45,6 +47,8 @@ type NovelServiceClient interface {
 	CreateChapter(ctx context.Context, in *CreateChapterRequest, opts ...grpc.CallOption) (*Chapter, error)
 	UpdateChapter(ctx context.Context, in *UpdateChapterRequest, opts ...grpc.CallOption) (*Chapter, error)
 	ListGenres(ctx context.Context, in *ListGenresRequest, opts ...grpc.CallOption) (*ListGenresResponse, error)
+	CreateGenre(ctx context.Context, in *CreateGenreRequest, opts ...grpc.CallOption) (*Genre, error)
+	DeleteGenre(ctx context.Context, in *DeleteGenreRequest, opts ...grpc.CallOption) (*DeleteGenreResponse, error)
 }
 
 type novelServiceClient struct {
@@ -155,6 +159,26 @@ func (c *novelServiceClient) ListGenres(ctx context.Context, in *ListGenresReque
 	return out, nil
 }
 
+func (c *novelServiceClient) CreateGenre(ctx context.Context, in *CreateGenreRequest, opts ...grpc.CallOption) (*Genre, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Genre)
+	err := c.cc.Invoke(ctx, NovelService_CreateGenre_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *novelServiceClient) DeleteGenre(ctx context.Context, in *DeleteGenreRequest, opts ...grpc.CallOption) (*DeleteGenreResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteGenreResponse)
+	err := c.cc.Invoke(ctx, NovelService_DeleteGenre_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NovelServiceServer is the server API for NovelService service.
 // All implementations must embed UnimplementedNovelServiceServer
 // for forward compatibility.
@@ -169,6 +193,8 @@ type NovelServiceServer interface {
 	CreateChapter(context.Context, *CreateChapterRequest) (*Chapter, error)
 	UpdateChapter(context.Context, *UpdateChapterRequest) (*Chapter, error)
 	ListGenres(context.Context, *ListGenresRequest) (*ListGenresResponse, error)
+	CreateGenre(context.Context, *CreateGenreRequest) (*Genre, error)
+	DeleteGenre(context.Context, *DeleteGenreRequest) (*DeleteGenreResponse, error)
 	mustEmbedUnimplementedNovelServiceServer()
 }
 
@@ -208,6 +234,12 @@ func (UnimplementedNovelServiceServer) UpdateChapter(context.Context, *UpdateCha
 }
 func (UnimplementedNovelServiceServer) ListGenres(context.Context, *ListGenresRequest) (*ListGenresResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListGenres not implemented")
+}
+func (UnimplementedNovelServiceServer) CreateGenre(context.Context, *CreateGenreRequest) (*Genre, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateGenre not implemented")
+}
+func (UnimplementedNovelServiceServer) DeleteGenre(context.Context, *DeleteGenreRequest) (*DeleteGenreResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteGenre not implemented")
 }
 func (UnimplementedNovelServiceServer) mustEmbedUnimplementedNovelServiceServer() {}
 func (UnimplementedNovelServiceServer) testEmbeddedByValue()                      {}
@@ -410,6 +442,42 @@ func _NovelService_ListGenres_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NovelService_CreateGenre_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateGenreRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NovelServiceServer).CreateGenre(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NovelService_CreateGenre_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NovelServiceServer).CreateGenre(ctx, req.(*CreateGenreRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NovelService_DeleteGenre_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteGenreRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NovelServiceServer).DeleteGenre(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NovelService_DeleteGenre_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NovelServiceServer).DeleteGenre(ctx, req.(*DeleteGenreRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NovelService_ServiceDesc is the grpc.ServiceDesc for NovelService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -456,6 +524,14 @@ var NovelService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListGenres",
 			Handler:    _NovelService_ListGenres_Handler,
+		},
+		{
+			MethodName: "CreateGenre",
+			Handler:    _NovelService_CreateGenre_Handler,
+		},
+		{
+			MethodName: "DeleteGenre",
+			Handler:    _NovelService_DeleteGenre_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
