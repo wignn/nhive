@@ -1,3 +1,14 @@
 [submodule "frontends"]
-	path = frontend
+	path = apps/frontend
 	url = https://github.com/wignn/novel-hive.git
+
+[submodule "mobile"]
+	path = apps/mobile
+	url = https://github.com/wignn/nhive-mobile.git
+
+[submodule "desktop"]
+	path = apps/desktop
+	url = https://github.com/wignn/nhive-desktop.git
+[submodule "apps/desktop"]
+	path = apps/desktop
+	url = https://github.com/wignn/nhive-desktop.git
