@@ -2,10 +2,10 @@
 	path = apps/mobile
 	url = https://github.com/wignn/nhive-mobile.git
 
-[submodule "desktop"]
+[submodule "apps/desktop"]
 	path = apps/desktop
 	url = https://github.com/wignn/nhive-desktop.git
 
-[submodule "web"]
+[submodule "apps/web"]
 	path = apps/web
 	url = https://github.com/wignn/nhive-web.git
