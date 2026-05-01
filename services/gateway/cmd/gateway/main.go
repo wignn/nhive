@@ -129,6 +129,10 @@ func main() {
 
 			r.Get("/admin/users", h.AdminListUsers)
 			r.Put("/admin/users/{id}/role", h.AdminUpdateUserRole)
+
+			r.Get("/admin/genres", h.AdminListGenres)
+			r.Post("/admin/genres", h.AdminCreateGenre)
+			r.Delete("/admin/genres/{id}", h.AdminDeleteGenre)
 		})
 	})
 

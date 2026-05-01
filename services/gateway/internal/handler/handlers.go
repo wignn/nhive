@@ -699,10 +699,90 @@ func (h *Handlers) AdminListChapters(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) AdminListUsers(w http.ResponseWriter, r *http.Request) {
-	// User listing not in proto — return empty for now
-	writeJSON(w, 200, map[string]interface{}{"users": []interface{}{}, "total": 0})
+	q := r.URL.Query()
+	page, _ := strconv.Atoi(q.Get("page"))
+	if page < 1 { page = 1 }
+	pageSize, _ := strconv.Atoi(q.Get("page_size"))
+	if pageSize < 1 { pageSize = 50 }
+
+	resp, err := h.Clients.User.ListUsers(r.Context(), &userv1.ListUsersRequest{
+		Page: int32(page),
+		PageSize: int32(pageSize),
+	})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, 200, map[string]interface{}{"users": resp.Users, "total": resp.Total})
 }
 
 func (h *Handlers) AdminUpdateUserRole(w http.ResponseWriter, r *http.Request) {
-	writeError(w, 501, "not implemented")
+	var req struct {
+		Role string `json:"role"`
+	}
+	if err := readJSON(r, &req); err != nil {
+		writeError(w, 400, "invalid body")
+		return
+	}
+	
+	uid := chi.URLParam(r, "id")
+	currentUser := middleware.GetUserID(r.Context())
+	if uid == currentUser && req.Role != "admin" {
+		writeError(w, 403, "cannot demote yourself")
+		return
+	}
+
+	_, err := h.Clients.User.UpdateUserRole(r.Context(), &userv1.UpdateUserRoleRequest{
+		UserId: uid,
+		Role: req.Role,
+	})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, 200, map[string]string{"status": "updated"})
+}
+
+func (h *Handlers) AdminCreateGenre(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Name string `json:"name"`
+	}
+	if err := readJSON(r, &req); err != nil || strings.TrimSpace(req.Name) == "" {
+		writeError(w, 400, "name is required")
+		return
+	}
+	resp, err := h.Clients.Novel.CreateGenre(r.Context(), &novelv1.CreateGenreRequest{
+		Name: sanitize(req.Name),
+	})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, 201, resp)
+}
+
+func (h *Handlers) AdminListGenres(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.Clients.Novel.ListGenres(r.Context(), &novelv1.ListGenresRequest{})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, 200, map[string]interface{}{"genres": resp.Genres})
+}
+
+func (h *Handlers) AdminDeleteGenre(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		writeError(w, 400, "invalid id")
+		return
+	}
+	_, err = h.Clients.Novel.DeleteGenre(r.Context(), &novelv1.DeleteGenreRequest{
+		Id: int32(id),
+	})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, 200, map[string]string{"status": "deleted"})
 }

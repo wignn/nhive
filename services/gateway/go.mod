@@ -43,7 +43,7 @@ require (
 )
 
 replace (
-	github.com/novelhive/pkg/grpcauth => ../pkg/grpcauth
-	github.com/novelhive/pkg/logger => ../pkg/logger
-	github.com/novelhive/proto => ../proto
+	github.com/novelhive/pkg/grpcauth => ../../pkg/grpcauth
+	github.com/novelhive/pkg/logger => ../../pkg/logger
+	github.com/novelhive/proto => ../../proto
 )

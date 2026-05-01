@@ -6,11 +6,11 @@ COPY proto/ /proto/
 
 COPY pkg/ /pkg/
 
-COPY gateway/go.mod gateway/go.sum ./
+COPY services/gateway/go.mod services/gateway/go.sum ./
 
 RUN go mod download
 
-COPY gateway/ .
+COPY services/gateway/ .
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s" \
