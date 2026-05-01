@@ -43,6 +43,12 @@ func AuthMiddleware(jwtSecret string) func(http.Handler) http.Handler {
 				return
 			}
 
+			tokenType, _ := claims["type"].(string)
+			if tokenType != "access" {
+				http.Error(w, `{"error":"invalid token type"}`, http.StatusUnauthorized)
+				return
+			}
+
 			userID, _ := claims["sub"].(string)
 			role, _ := claims["role"].(string)
 
@@ -53,23 +59,25 @@ func AuthMiddleware(jwtSecret string) func(http.Handler) http.Handler {
 	}
 }
 
-// OptionalAuth extracts user info if present but doesn't require it
 func OptionalAuth(jwtSecret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
 			if authHeader != "" {
 				tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
-				token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+			token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 					return []byte(jwtSecret), nil
 				})
 				if err == nil && token.Valid {
 					if claims, ok := token.Claims.(jwt.MapClaims); ok {
-						userID, _ := claims["sub"].(string)
-						role, _ := claims["role"].(string)
-						ctx := context.WithValue(r.Context(), UserIDKey, userID)
-						ctx = context.WithValue(ctx, RoleKey, role)
-						r = r.WithContext(ctx)
+						tokenType, _ := claims["type"].(string)
+						if tokenType == "access" {
+							userID, _ := claims["sub"].(string)
+							role, _ := claims["role"].(string)
+							ctx := context.WithValue(r.Context(), UserIDKey, userID)
+							ctx = context.WithValue(ctx, RoleKey, role)
+							r = r.WithContext(ctx)
+						}
 					}
 				}
 			}

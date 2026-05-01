@@ -11,6 +11,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	accessTokenDuration  = 15 * time.Minute
+	refreshTokenDuration = 7 * 24 * time.Hour
+)
+
 type UserUsecase struct {
 	repo      domain.UserRepository
 	jwtSecret []byte
@@ -23,24 +28,24 @@ func NewUserUsecase(repo domain.UserRepository, jwtSecret string) *UserUsecase {
 	}
 }
 
-func (uc *UserUsecase) Register(input domain.RegisterInput) (*domain.User, string, error) {
+func (uc *UserUsecase) Register(input domain.RegisterInput) (*domain.User, string, string, error) {
 	// Validate input
 	if strings.TrimSpace(input.Username) == "" || strings.TrimSpace(input.Email) == "" || len(input.Password) < 6 {
-		return nil, "", domain.ErrInvalidInput
+		return nil, "", "", domain.ErrInvalidInput
 	}
 
 	// Check existing
 	if exists, _ := uc.repo.ExistsByEmail(input.Email); exists {
-		return nil, "", domain.ErrEmailExists
+		return nil, "", "", domain.ErrEmailExists
 	}
 	if exists, _ := uc.repo.ExistsByUsername(input.Username); exists {
-		return nil, "", domain.ErrUsernameExists
+		return nil, "", "", domain.ErrUsernameExists
 	}
 
 	// Hash password
 	hash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", err
 	}
 
 	user := &domain.User{
@@ -53,33 +58,87 @@ func (uc *UserUsecase) Register(input domain.RegisterInput) (*domain.User, strin
 	}
 
 	if err := uc.repo.Create(user); err != nil {
-		return nil, "", err
+		return nil, "", "", err
 	}
 
-	token, err := uc.generateToken(user)
+	accessToken, err := uc.generateAccessToken(user)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", err
 	}
 
-	return user, token, nil
+	refreshToken, err := uc.generateRefreshToken(user)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	return user, accessToken, refreshToken, nil
 }
 
-func (uc *UserUsecase) Login(input domain.LoginInput) (*domain.User, string, error) {
+func (uc *UserUsecase) Login(input domain.LoginInput) (*domain.User, string, string, error) {
 	user, err := uc.repo.GetByEmail(strings.ToLower(input.Email))
 	if err != nil {
-		return nil, "", domain.ErrInvalidPassword
+		return nil, "", "", domain.ErrInvalidPassword
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(input.Password)); err != nil {
-		return nil, "", domain.ErrInvalidPassword
+		return nil, "", "", domain.ErrInvalidPassword
 	}
 
-	token, err := uc.generateToken(user)
+	accessToken, err := uc.generateAccessToken(user)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", err
 	}
 
-	return user, token, nil
+	refreshToken, err := uc.generateRefreshToken(user)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	return user, accessToken, refreshToken, nil
+}
+
+func (uc *UserUsecase) RefreshToken(refreshTokenStr string) (string, string, error) {
+	token, err := jwt.Parse(refreshTokenStr, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, domain.ErrRefreshTokenInvalid
+		}
+		return uc.jwtSecret, nil
+	})
+	if err != nil || !token.Valid {
+		return "", "", domain.ErrRefreshTokenInvalid
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", "", domain.ErrRefreshTokenInvalid
+	}
+
+	// Ensure this is a refresh token, not an access token
+	tokenType, _ := claims["type"].(string)
+	if tokenType != "refresh" {
+		return "", "", domain.ErrRefreshTokenInvalid
+	}
+
+	userID, _ := claims["sub"].(string)
+	if userID == "" {
+		return "", "", domain.ErrRefreshTokenInvalid
+	}
+
+	user, err := uc.repo.GetByID(userID)
+	if err != nil {
+		return "", "", domain.ErrUserNotFound
+	}
+	newAccessToken, err := uc.generateAccessToken(user)
+	if err != nil {
+		return "", "", err
+	}
+
+	newRefreshToken, err := uc.generateRefreshToken(user)
+	if err != nil {
+		return "", "", err
+	}
+
+	return newAccessToken, newRefreshToken, nil
 }
 
 func (uc *UserUsecase) GetProfile(userID string) (*domain.User, error) {
@@ -114,16 +173,34 @@ func (uc *UserUsecase) ValidateToken(tokenStr string) (string, string, error) {
 		return "", "", domain.ErrInvalidToken
 	}
 
+	// Only accept access tokens for validation
+	tokenType, _ := claims["type"].(string)
+	if tokenType != "access" {
+		return "", "", domain.ErrInvalidToken
+	}
+
 	userID, _ := claims["sub"].(string)
 	role, _ := claims["role"].(string)
 	return userID, role, nil
 }
 
-func (uc *UserUsecase) generateToken(user *domain.User) (string, error) {
+func (uc *UserUsecase) generateAccessToken(user *domain.User) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":  user.ID,
 		"role": user.Role,
-		"exp":  time.Now().Add(72 * time.Hour).Unix(),
+		"type": "access",
+		"exp":  time.Now().Add(accessTokenDuration).Unix(),
+		"iat":  time.Now().Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(uc.jwtSecret)
+}
+
+func (uc *UserUsecase) generateRefreshToken(user *domain.User) (string, error) {
+	claims := jwt.MapClaims{
+		"sub":  user.ID,
+		"type": "refresh",
+		"exp":  time.Now().Add(refreshTokenDuration).Unix(),
 		"iat":  time.Now().Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

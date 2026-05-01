@@ -60,14 +60,15 @@ func (h *Handlers) r2BaseURL() string {
 	return fmt.Sprintf("%s/%s", h.R2Client.Config.R2Endpoint, h.R2Client.Config.R2BucketName)
 }
 
-func (h *Handlers) generateToken(userID, username, email, role, avatarURL string) (string, error) {
+func (h *Handlers) generateAccessToken(userID, username, email, role, avatarURL string) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":      userID,
 		"username": username,
 		"email":    email,
 		"role":     role,
 		"avatar":   avatarURL,
-		"exp":      time.Now().Add(72 * time.Hour).Unix(),
+		"type":     "access",
+		"exp":      time.Now().Add(15 * time.Minute).Unix(),
 		"iat":      time.Now().Unix(),
 	}
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(h.JWTSecret)
@@ -100,8 +101,9 @@ func (h *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 201, map[string]interface{}{
-		"user_id": resp.UserId,
-		"token":   resp.Token,
+		"user_id":       resp.UserId,
+		"access_token":  resp.AccessToken,
+		"refresh_token": resp.RefreshToken,
 	})
 }
 
@@ -123,8 +125,9 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 200, map[string]interface{}{
-		"user_id": resp.UserId,
-		"token":   resp.Token,
+		"user_id":       resp.UserId,
+		"access_token":  resp.AccessToken,
+		"refresh_token": resp.RefreshToken,
 		"user": map[string]string{
 			"id":         resp.Profile.Id,
 			"username":   resp.Profile.Username,
@@ -132,6 +135,28 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 			"role":       resp.Profile.Role,
 			"avatar_url": resp.Profile.AvatarUrl,
 		},
+	})
+}
+
+func (h *Handlers) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+	if err := readJSON(r, &req); err != nil || req.RefreshToken == "" {
+		writeError(w, 400, "refresh_token is required")
+		return
+	}
+
+	resp, err := h.Clients.User.RefreshToken(r.Context(), &userv1.RefreshTokenRequest{
+		RefreshToken: req.RefreshToken,
+	})
+	if err != nil {
+		writeError(w, 401, "invalid or expired refresh token")
+		return
+	}
+	writeJSON(w, 200, map[string]interface{}{
+		"access_token":  resp.AccessToken,
+		"refresh_token": resp.RefreshToken,
 	})
 }
 

@@ -79,6 +79,7 @@ func main() {
 		r.Group(func(r chi.Router) {
 			r.Post("/auth/register", h.Register)
 			r.Post("/auth/login", h.Login)
+			r.Post("/auth/refresh", h.RefreshToken)
 
 			r.Get("/novels", h.ListNovels)
 			r.Get("/novels/{slug}", h.GetNovel)

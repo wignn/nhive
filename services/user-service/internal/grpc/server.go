@@ -20,7 +20,7 @@ func NewUserServiceServer(uc *usecase.UserUsecase) *UserServiceServer {
 }
 
 func (s *UserServiceServer) Register(ctx context.Context, req *userv1.RegisterRequest) (*userv1.RegisterResponse, error) {
-	user, token, err := s.uc.Register(domain.RegisterInput{
+	user, accessToken, refreshToken, err := s.uc.Register(domain.RegisterInput{
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
@@ -29,13 +29,14 @@ func (s *UserServiceServer) Register(ctx context.Context, req *userv1.RegisterRe
 		return nil, mapDomainError(err)
 	}
 	return &userv1.RegisterResponse{
-		UserId: user.ID,
-		Token:  token,
+		UserId:       user.ID,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}, nil
 }
 
 func (s *UserServiceServer) Login(ctx context.Context, req *userv1.LoginRequest) (*userv1.LoginResponse, error) {
-	user, token, err := s.uc.Login(domain.LoginInput{
+	user, accessToken, refreshToken, err := s.uc.Login(domain.LoginInput{
 		Email:    req.Email,
 		Password: req.Password,
 	})
@@ -43,8 +44,9 @@ func (s *UserServiceServer) Login(ctx context.Context, req *userv1.LoginRequest)
 		return nil, status.Error(codes.Unauthenticated, "invalid credentials")
 	}
 	return &userv1.LoginResponse{
-		UserId: user.ID,
-		Token:  token,
+		UserId:       user.ID,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 		Profile: &userv1.UserProfile{
 			Id:        user.ID,
 			Username:  user.Username,
@@ -53,6 +55,17 @@ func (s *UserServiceServer) Login(ctx context.Context, req *userv1.LoginRequest)
 			Role:      user.Role,
 			CreatedAt: user.CreatedAt.Format("2006-01-02T15:04:05Z"),
 		},
+	}, nil
+}
+
+func (s *UserServiceServer) RefreshToken(ctx context.Context, req *userv1.RefreshTokenRequest) (*userv1.RefreshTokenResponse, error) {
+	accessToken, refreshToken, err := s.uc.RefreshToken(req.RefreshToken)
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+	return &userv1.RefreshTokenResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}, nil
 }
 
@@ -137,7 +150,9 @@ func mapDomainError(err error) error {
 		return status.Error(codes.AlreadyExists, err.Error())
 	case domain.ErrInvalidPassword:
 		return status.Error(codes.Unauthenticated, err.Error())
-	case domain.ErrInvalidToken:
+	case domain.ErrInvalidToken, domain.ErrRefreshTokenInvalid:
+		return status.Error(codes.Unauthenticated, err.Error())
+	case domain.ErrTokenExpired:
 		return status.Error(codes.Unauthenticated, err.Error())
 	case domain.ErrInvalidInput:
 		return status.Error(codes.InvalidArgument, err.Error())
