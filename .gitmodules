@@ -1,5 +1,3 @@
-
-
 [submodule "mobile"]
 	path = apps/mobile
 	url = https://github.com/wignn/nhive-mobile.git
@@ -7,6 +5,7 @@
 [submodule "desktop"]
 	path = apps/desktop
 	url = https://github.com/wignn/nhive-desktop.git
+
 [submodule "apps/frontend"]
 	path = apps/frontend
 	url = https://github.com/wignn/nhive-web.git
