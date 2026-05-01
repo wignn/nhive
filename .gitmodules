@@ -1,4 +1,4 @@
-[submodule "frontends"]
+[submodule "frontend"]
 	path = apps/frontend
 	url = https://github.com/wignn/nhive-web.git
 
@@ -9,6 +9,3 @@
 [submodule "desktop"]
 	path = apps/desktop
 	url = https://github.com/wignn/nhive-desktop.git
-[submodule "apps/nhive-web"]
-	path = apps/nhive-web
-	url = https://github.com/wignn/nhive-web.git
