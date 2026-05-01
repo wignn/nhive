@@ -67,8 +67,10 @@ type NovelRepository interface {
 type ChapterRepository interface {
 	Create(chapter *Chapter) error
 	GetByNovelAndNumber(novelSlug string, number int) (*Chapter, error)
+	GetByID(id string) (*Chapter, error)
 	List(params ListChaptersParams) ([]ChapterSummary, int, error)
 	Update(chapter *Chapter) error
+	Delete(id string) error
 	CountByNovelID(novelID string) (int, error)
 }
 

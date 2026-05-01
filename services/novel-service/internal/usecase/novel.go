@@ -152,8 +152,11 @@ func (uc *NovelUsecase) SetGenres(novelID string, genreIDs []int) error {
 }
 
 func (uc *NovelUsecase) UpdateChapter(id, title, content string) (*domain.Chapter, error) {
-	// Find chapter by id and update
-	ch := &domain.Chapter{ID: id}
+	ch, err := uc.chapterRepo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	
 	if title != "" {
 		ch.Title = title
 	}
@@ -165,6 +168,30 @@ func (uc *NovelUsecase) UpdateChapter(id, title, content string) (*domain.Chapte
 		return nil, err
 	}
 	return ch, nil
+}
+
+func (uc *NovelUsecase) DeleteChapter(id string) error {
+	ch, err := uc.chapterRepo.GetByID(id)
+	if err != nil {
+		return err
+	}
+	
+	err = uc.chapterRepo.Delete(id)
+	if err != nil {
+		return err
+	}
+
+	// Update novel total chapters
+	count, _ := uc.chapterRepo.CountByNovelID(ch.NovelID)
+	if novel, err := uc.novelRepo.GetByID(ch.NovelID); err == nil {
+		novel.TotalChapters = count
+		novel.UpdatedAt = time.Now()
+		uc.novelRepo.Update(novel)
+		if uc.cache != nil {
+			uc.cache.InvalidateNovel(novel.Slug)
+		}
+	}
+	return nil
 }
 
 func generateID() string {

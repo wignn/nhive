@@ -697,7 +697,14 @@ func (h *Handlers) AdminUpdateChapter(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) AdminDeleteChapter(w http.ResponseWriter, r *http.Request) {
-	writeError(w, 501, "not implemented")
+	_, err := h.Clients.Novel.DeleteChapter(r.Context(), &novelv1.DeleteChapterRequest{
+		Id: chi.URLParam(r, "id"),
+	})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, 200, map[string]string{"status": "deleted"})
 }
 
 func (h *Handlers) AdminListChapters(w http.ResponseWriter, r *http.Request) {

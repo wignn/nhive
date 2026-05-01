@@ -186,7 +186,12 @@ func (s *NovelServiceServer) UpdateChapter(ctx context.Context, req *novelv1.Upd
 	return toProtoChapter(ch), nil
 }
 
-// --- Genre RPCs ---
+func (s *NovelServiceServer) DeleteChapter(ctx context.Context, req *novelv1.DeleteChapterRequest) (*novelv1.DeleteChapterResponse, error) {
+	if err := s.uc.DeleteChapter(req.Id); err != nil {
+		return nil, status.Error(codes.NotFound, "chapter not found")
+	}
+	return &novelv1.DeleteChapterResponse{Success: true}, nil
+}
 
 func (s *NovelServiceServer) ListGenres(ctx context.Context, req *novelv1.ListGenresRequest) (*novelv1.ListGenresResponse, error) {
 	genres, err := s.uc.ListGenres()
@@ -226,8 +231,6 @@ func (s *NovelServiceServer) DeleteGenre(ctx context.Context, req *novelv1.Delet
 	return &novelv1.DeleteGenreResponse{Success: true}, nil
 }
 
-
-// --- Helpers ---
 
 func toProtoNovel(n *domain.Novel) *novelv1.Novel {
 	var genres []*novelv1.Genre

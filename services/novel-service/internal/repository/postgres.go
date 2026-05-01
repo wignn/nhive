@@ -83,12 +83,10 @@ func (r *PostgresNovelRepo) List(params domain.ListNovelsParams) ([]*domain.Nove
 		argIdx++
 	}
 
-	// Count
 	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM novels n %s", where)
 	var total int
 	r.pool.QueryRow(context.Background(), countQuery, args...).Scan(&total)
 
-	// Sort
 	orderBy := "ORDER BY n.updated_at DESC"
 	if params.SortBy == "title" {
 		orderBy = "ORDER BY n.title ASC"
@@ -256,6 +254,26 @@ func (r *PostgresChapterRepo) CountByNovelID(novelID string) (int, error) {
 	var count int
 	err := r.pool.QueryRow(context.Background(), "SELECT COUNT(*) FROM chapters WHERE novel_id = $1", novelID).Scan(&count)
 	return count, err
+}
+
+func (r *PostgresChapterRepo) GetByID(id string) (*domain.Chapter, error) {
+	query := `SELECT id, novel_id, number, title, content, word_count, created_at FROM chapters WHERE id = $1`
+	var ch domain.Chapter
+	err := r.pool.QueryRow(context.Background(), query, id).Scan(
+		&ch.ID, &ch.NovelID, &ch.Number, &ch.Title, &ch.Content, &ch.WordCount, &ch.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrChapterNotFound
+		}
+		return nil, err
+	}
+	return &ch, nil
+}
+
+func (r *PostgresChapterRepo) Delete(id string) error {
+	_, err := r.pool.Exec(context.Background(), "DELETE FROM chapters WHERE id = $1", id)
+	return err
 }
 
 // Genre repository
