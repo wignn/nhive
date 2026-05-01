@@ -173,9 +173,9 @@ func (uc *UserUsecase) ValidateToken(tokenStr string) (string, string, error) {
 		return "", "", domain.ErrInvalidToken
 	}
 
-	// Only accept access tokens for validation
+	// Only accept access tokens (or legacy tokens without type claim)
 	tokenType, _ := claims["type"].(string)
-	if tokenType != "access" {
+	if tokenType != "" && tokenType != "access" {
 		return "", "", domain.ErrInvalidToken
 	}
 

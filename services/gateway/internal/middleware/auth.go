@@ -43,8 +43,9 @@ func AuthMiddleware(jwtSecret string) func(http.Handler) http.Handler {
 				return
 			}
 
+			// Only accept access tokens (or legacy tokens without type claim)
 			tokenType, _ := claims["type"].(string)
-			if tokenType != "access" {
+			if tokenType != "" && tokenType != "access" {
 				http.Error(w, `{"error":"invalid token type"}`, http.StatusUnauthorized)
 				return
 			}
@@ -65,13 +66,13 @@ func OptionalAuth(jwtSecret string) func(http.Handler) http.Handler {
 			authHeader := r.Header.Get("Authorization")
 			if authHeader != "" {
 				tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
-			token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+				token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 					return []byte(jwtSecret), nil
 				})
 				if err == nil && token.Valid {
 					if claims, ok := token.Claims.(jwt.MapClaims); ok {
 						tokenType, _ := claims["type"].(string)
-						if tokenType == "access" {
+						if tokenType == "" || tokenType == "access" {
 							userID, _ := claims["sub"].(string)
 							role, _ := claims["role"].(string)
 							ctx := context.WithValue(r.Context(), UserIDKey, userID)
