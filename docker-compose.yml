@@ -231,20 +231,20 @@ services:
     ports:
       - "8080:8080"  
 
-  web:
-    build:
-      context: ./apps/web
-      dockerfile: Dockerfile
-    container_name: web
-    restart: unless-stopped
-    networks:
-      - novelhive-net
-    depends_on:
-      - gateway
-    env_file:
-      - .env
-    ports:
-      - "3001:3000"
+  # web:
+  #   build:
+  #     context: ./apps/web
+  #     dockerfile: Dockerfile
+  #   container_name: web
+  #   restart: unless-stopped
+  #   networks:
+  #     - novelhive-net
+  #   depends_on:
+  #     - gateway
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - "3001:3000"
 
 volumes:
   pgdata:

@@ -32,6 +32,40 @@ func (s *NovelServiceServer) GetNovel(ctx context.Context, req *novelv1.GetNovel
 	return toProtoNovel(novel), nil
 }
 
+func (s *NovelServiceServer) GetNovelsByIds(ctx context.Context, req *novelv1.GetNovelsByIdsRequest) (*novelv1.GetNovelsByIdsResponse, error) {
+	if req == nil || len(req.Ids) == 0 {
+		return &novelv1.GetNovelsByIdsResponse{Novels: []*novelv1.Novel{}}, nil
+	}
+
+	// Dedupe while preserving input order.
+	seen := make(map[string]struct{}, len(req.Ids))
+	ids := make([]string, 0, len(req.Ids))
+	for _, id := range req.Ids {
+		if id == "" {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+
+	protoNovels := make([]*novelv1.Novel, 0, len(ids))
+	for _, id := range ids {
+		novel, err := s.uc.GetNovelByID(id)
+		if err != nil {
+			if err == domain.ErrNovelNotFound {
+				continue
+			}
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		protoNovels = append(protoNovels, toProtoNovel(novel))
+	}
+
+	return &novelv1.GetNovelsByIdsResponse{Novels: protoNovels}, nil
+}
+
 func (s *NovelServiceServer) ListNovels(ctx context.Context, req *novelv1.ListNovelsRequest) (*novelv1.ListNovelsResponse, error) {
 	page := int(req.Page)
 	if page < 1 {
@@ -230,7 +264,6 @@ func (s *NovelServiceServer) DeleteGenre(ctx context.Context, req *novelv1.Delet
 	}
 	return &novelv1.DeleteGenreResponse{Success: true}, nil
 }
-
 
 func toProtoNovel(n *domain.Novel) *novelv1.Novel {
 	var genres []*novelv1.Genre

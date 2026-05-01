@@ -6,6 +6,7 @@ option go_package = "github.com/novelhive/proto/novel/v1;novelv1";
 
 service NovelService {
   rpc GetNovel(GetNovelRequest) returns (Novel);
+  rpc GetNovelsByIds(GetNovelsByIdsRequest) returns (GetNovelsByIdsResponse);
   rpc ListNovels(ListNovelsRequest) returns (ListNovelsResponse);
   rpc CreateNovel(CreateNovelRequest) returns (Novel);
   rpc UpdateNovel(UpdateNovelRequest) returns (Novel);
@@ -52,6 +53,14 @@ message Chapter {
 
 message GetNovelRequest {
   string slug = 1;
+}
+
+message GetNovelsByIdsRequest {
+  repeated string ids = 1;
+}
+
+message GetNovelsByIdsResponse {
+  repeated Novel novels = 1;
 }
 
 message ListNovelsRequest {

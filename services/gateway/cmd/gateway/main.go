@@ -101,6 +101,7 @@ func main() {
 			r.Post("/comments/{commentId}/like", h.LikeComment)
 
 			r.Get("/library", h.GetLibrary)
+			r.Get("/library/{novelId}", h.GetLibraryEntry)
 			r.Post("/library/{novelId}", h.AddToLibrary)
 			r.Delete("/library/{novelId}", h.RemoveFromLibrary)
 			r.Put("/library/{novelId}/status", h.UpdateLibraryStatus)

@@ -37,7 +37,16 @@ func NewLibraryServiceServer(
 }
 
 func (s *LibraryServiceServer) GetLibrary(ctx context.Context, req *libraryv1.GetLibraryRequest) (*libraryv1.GetLibraryResponse, error) {
-	entries, total, err := s.libraryRepo.GetLibrary(req.UserId, "", 1, 100)
+	page := int(req.Page)
+	if page < 1 {
+		page = 1
+	}
+	pageSize := int(req.PageSize)
+	if pageSize < 1 || pageSize > 50 {
+		pageSize = 20
+	}
+
+	entries, total, err := s.libraryRepo.GetLibrary(req.UserId, req.Status, page, pageSize)
 	if err != nil {
 		s.logger.Error("failed to get library",
 			zap.String("user_id", req.UserId),

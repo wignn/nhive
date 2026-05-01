@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -176,7 +177,6 @@ func (h *Handlers) GetProfile(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-
 func (h *Handlers) ListNovels(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	page, _ := strconv.Atoi(q.Get("page"))
@@ -265,9 +265,14 @@ func (h *Handlers) ReadChapter(w http.ResponseWriter, r *http.Request) {
 		totalChapters = novel.TotalChapters
 	}
 	writeJSON(w, 200, map[string]interface{}{
-		"id":             ch.Id,
-		"novel_id":       ch.NovelId,
-		"novel_title":    func() string { if novel != nil { return novel.Title }; return "" }(),
+		"id":       ch.Id,
+		"novel_id": ch.NovelId,
+		"novel_title": func() string {
+			if novel != nil {
+				return novel.Title
+			}
+			return ""
+		}(),
 		"novel_slug":     slug,
 		"number":         ch.Number,
 		"title":          ch.Title,
@@ -386,16 +391,205 @@ func (h *Handlers) LikeComment(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, resp)
 }
 
-// ─── Library ─────────────────────────────────────────────────────────────────
-
 func (h *Handlers) GetLibrary(w http.ResponseWriter, r *http.Request) {
 	uid := middleware.GetUserID(r.Context())
-	resp, err := h.Clients.Library.GetLibrary(r.Context(), &libraryv1.GetLibraryRequest{UserId: uid})
-	if err != nil || resp == nil {
-		writeJSON(w, 200, map[string]interface{}{"entries": []interface{}{}, "total": 0})
+
+	const (
+		libraryPageSize = 50
+		libraryMaxPages = 20
+	)
+
+	var total int32
+	allEntries := make([]*libraryv1.LibraryEntry, 0, libraryPageSize)
+	for page := 1; page <= libraryMaxPages; page++ {
+		resp, err := h.Clients.Library.GetLibrary(r.Context(), &libraryv1.GetLibraryRequest{
+			UserId:   uid,
+			Page:     int32(page),
+			PageSize: libraryPageSize,
+		})
+		if err != nil || resp == nil {
+			break
+		}
+		if page == 1 {
+			total = resp.Total
+		}
+		if len(resp.Entries) == 0 {
+			break
+		}
+		allEntries = append(allEntries, resp.Entries...)
+		if total > 0 && int32(len(allEntries)) >= total {
+			break
+		}
+		if len(resp.Entries) < libraryPageSize {
+			break
+		}
+	}
+
+	if len(allEntries) == 0 {
+		writeJSON(w, 200, map[string]interface{}{"entries": []interface{}{}, "total": 0, "cover_base_url": h.r2BaseURL()})
 		return
 	}
-	writeJSON(w, 200, map[string]interface{}{"entries": resp.Entries, "total": resp.Total})
+
+	ids := make([]string, 0, len(allEntries))
+	seen := make(map[string]struct{}, len(allEntries))
+	for _, e := range allEntries {
+		if e == nil || e.NovelId == "" {
+			continue
+		}
+		if _, ok := seen[e.NovelId]; ok {
+			continue
+		}
+		seen[e.NovelId] = struct{}{}
+		ids = append(ids, e.NovelId)
+	}
+
+	novelsByID := make(map[string]*novelv1.Novel, len(ids))
+	const novelBatchSize = 200
+	for start := 0; start < len(ids); start += novelBatchSize {
+		end := start + novelBatchSize
+		if end > len(ids) {
+			end = len(ids)
+		}
+		novelsResp, nerr := h.Clients.Novel.GetNovelsByIds(r.Context(), &novelv1.GetNovelsByIdsRequest{Ids: ids[start:end]})
+		if nerr != nil || novelsResp == nil {
+			continue
+		}
+		for _, n := range novelsResp.Novels {
+			if n != nil && n.Id != "" {
+				novelsByID[n.Id] = n
+			}
+		}
+	}
+
+	const progressConcurrency = 8
+	progressByNovelID := make(map[string]int32, len(ids))
+	if len(ids) > 0 {
+		sem := make(chan struct{}, progressConcurrency)
+		var wg sync.WaitGroup
+		var mu sync.Mutex
+		for _, id := range ids {
+			id := id
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				sem <- struct{}{}
+				defer func() { <-sem }()
+				p, perr := h.Clients.Library.GetProgress(r.Context(), &libraryv1.GetProgressRequest{UserId: uid, NovelId: id})
+				if perr != nil || p == nil {
+					return
+				}
+				mu.Lock()
+				progressByNovelID[id] = p.ChapterNumber
+				mu.Unlock()
+			}()
+		}
+		wg.Wait()
+	}
+
+	entries := make([]map[string]interface{}, 0, len(allEntries))
+	for _, e := range allEntries {
+		if e == nil {
+			continue
+		}
+		entry := map[string]interface{}{
+			"id":         e.Id,
+			"user_id":    e.UserId,
+			"novel_id":   e.NovelId,
+			"status":     e.Status,
+			"created_at": e.CreatedAt,
+		}
+		if n := novelsByID[e.NovelId]; n != nil {
+			entry["novel_title"] = n.Title
+			entry["novel_slug"] = n.Slug
+			entry["total"] = n.TotalChapters
+			entry["cover_url"] = n.CoverUrl
+			entry["author"] = n.Author
+		}
+		if p, ok := progressByNovelID[e.NovelId]; ok {
+			entry["progress"] = p
+		} else {
+			entry["progress"] = int32(0)
+		}
+		entries = append(entries, entry)
+	}
+
+	if total == 0 {
+		total = int32(len(entries))
+	}
+
+	writeJSON(w, 200, map[string]interface{}{
+		"entries":        entries,
+		"total":          total,
+		"cover_base_url": h.r2BaseURL(),
+	})
+}
+
+func (h *Handlers) GetLibraryEntry(w http.ResponseWriter, r *http.Request) {
+	uid := middleware.GetUserID(r.Context())
+	novelID := chi.URLParam(r, "novelId")
+	if novelID == "" {
+		writeError(w, 400, "novelId is required")
+		return
+	}
+
+	const (
+		pageSize = 50
+		maxPages = 20
+	)
+
+	var entry *libraryv1.LibraryEntry
+	for page := 1; page <= maxPages; page++ {
+		resp, err := h.Clients.Library.GetLibrary(r.Context(), &libraryv1.GetLibraryRequest{UserId: uid, Page: int32(page), PageSize: pageSize})
+		if err != nil || resp == nil || len(resp.Entries) == 0 {
+			break
+		}
+		for _, e := range resp.Entries {
+			if e != nil && e.NovelId == novelID {
+				entry = e
+				break
+			}
+		}
+		if entry != nil {
+			break
+		}
+		if len(resp.Entries) < pageSize {
+			break
+		}
+	}
+
+	if entry == nil {
+		writeJSON(w, 200, map[string]interface{}{"in_library": false, "cover_base_url": h.r2BaseURL()})
+		return
+	}
+
+	// Novel details (best-effort).
+	var novel map[string]interface{}
+	if novelsResp, err := h.Clients.Novel.GetNovelsByIds(r.Context(), &novelv1.GetNovelsByIdsRequest{Ids: []string{novelID}}); err == nil && novelsResp != nil {
+		if len(novelsResp.Novels) > 0 && novelsResp.Novels[0] != nil {
+			n := novelsResp.Novels[0]
+			novel = map[string]interface{}{
+				"id":             n.Id,
+				"title":          n.Title,
+				"slug":           n.Slug,
+				"cover_url":      n.CoverUrl,
+				"author":         n.Author,
+				"total_chapters": n.TotalChapters,
+			}
+		}
+	}
+
+	progress := int32(0)
+	if p, err := h.Clients.Library.GetProgress(r.Context(), &libraryv1.GetProgressRequest{UserId: uid, NovelId: novelID}); err == nil && p != nil {
+		progress = p.ChapterNumber
+	}
+
+	writeJSON(w, 200, map[string]interface{}{
+		"in_library":     true,
+		"entry":          entry,
+		"novel":          novel,
+		"progress":       progress,
+		"cover_base_url": h.r2BaseURL(),
+	})
 }
 
 func (h *Handlers) AddToLibrary(w http.ResponseWriter, r *http.Request) {
@@ -504,7 +698,6 @@ func (h *Handlers) AddBookmark(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, 201, resp)
 }
-
 
 func (h *Handlers) AdminUploadImage(w http.ResponseWriter, r *http.Request) {
 	if h.R2Client == nil {
@@ -763,12 +956,16 @@ func (h *Handlers) AdminGetChapter(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) AdminListUsers(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	page, _ := strconv.Atoi(q.Get("page"))
-	if page < 1 { page = 1 }
+	if page < 1 {
+		page = 1
+	}
 	pageSize, _ := strconv.Atoi(q.Get("page_size"))
-	if pageSize < 1 { pageSize = 50 }
+	if pageSize < 1 {
+		pageSize = 50
+	}
 
 	resp, err := h.Clients.User.ListUsers(r.Context(), &userv1.ListUsersRequest{
-		Page: int32(page),
+		Page:     int32(page),
 		PageSize: int32(pageSize),
 	})
 	if err != nil {
@@ -786,7 +983,7 @@ func (h *Handlers) AdminUpdateUserRole(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 400, "invalid body")
 		return
 	}
-	
+
 	uid := chi.URLParam(r, "id")
 	currentUser := middleware.GetUserID(r.Context())
 	if uid == currentUser && req.Role != "admin" {
@@ -796,7 +993,7 @@ func (h *Handlers) AdminUpdateUserRole(w http.ResponseWriter, r *http.Request) {
 
 	_, err := h.Clients.User.UpdateUserRole(r.Context(), &userv1.UpdateUserRoleRequest{
 		UserId: uid,
-		Role: req.Role,
+		Role:   req.Role,
 	})
 	if err != nil {
 		writeError(w, 500, err.Error())

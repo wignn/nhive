@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.1
 // - protoc             v4.25.9
-// source: novel.proto
+// source: proto/novel/v1/novel.proto
 
 package novelv1
 
@@ -19,19 +19,20 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	NovelService_GetNovel_FullMethodName      = "/novel.v1.NovelService/GetNovel"
-	NovelService_ListNovels_FullMethodName    = "/novel.v1.NovelService/ListNovels"
-	NovelService_CreateNovel_FullMethodName   = "/novel.v1.NovelService/CreateNovel"
-	NovelService_UpdateNovel_FullMethodName   = "/novel.v1.NovelService/UpdateNovel"
-	NovelService_DeleteNovel_FullMethodName   = "/novel.v1.NovelService/DeleteNovel"
-	NovelService_GetChapter_FullMethodName    = "/novel.v1.NovelService/GetChapter"
-	NovelService_ListChapters_FullMethodName  = "/novel.v1.NovelService/ListChapters"
-	NovelService_CreateChapter_FullMethodName = "/novel.v1.NovelService/CreateChapter"
-	NovelService_UpdateChapter_FullMethodName = "/novel.v1.NovelService/UpdateChapter"
-	NovelService_DeleteChapter_FullMethodName = "/novel.v1.NovelService/DeleteChapter"
-	NovelService_ListGenres_FullMethodName    = "/novel.v1.NovelService/ListGenres"
-	NovelService_CreateGenre_FullMethodName   = "/novel.v1.NovelService/CreateGenre"
-	NovelService_DeleteGenre_FullMethodName   = "/novel.v1.NovelService/DeleteGenre"
+	NovelService_GetNovel_FullMethodName       = "/novel.v1.NovelService/GetNovel"
+	NovelService_GetNovelsByIds_FullMethodName = "/novel.v1.NovelService/GetNovelsByIds"
+	NovelService_ListNovels_FullMethodName     = "/novel.v1.NovelService/ListNovels"
+	NovelService_CreateNovel_FullMethodName    = "/novel.v1.NovelService/CreateNovel"
+	NovelService_UpdateNovel_FullMethodName    = "/novel.v1.NovelService/UpdateNovel"
+	NovelService_DeleteNovel_FullMethodName    = "/novel.v1.NovelService/DeleteNovel"
+	NovelService_GetChapter_FullMethodName     = "/novel.v1.NovelService/GetChapter"
+	NovelService_ListChapters_FullMethodName   = "/novel.v1.NovelService/ListChapters"
+	NovelService_CreateChapter_FullMethodName  = "/novel.v1.NovelService/CreateChapter"
+	NovelService_UpdateChapter_FullMethodName  = "/novel.v1.NovelService/UpdateChapter"
+	NovelService_DeleteChapter_FullMethodName  = "/novel.v1.NovelService/DeleteChapter"
+	NovelService_ListGenres_FullMethodName     = "/novel.v1.NovelService/ListGenres"
+	NovelService_CreateGenre_FullMethodName    = "/novel.v1.NovelService/CreateGenre"
+	NovelService_DeleteGenre_FullMethodName    = "/novel.v1.NovelService/DeleteGenre"
 )
 
 // NovelServiceClient is the client API for NovelService service.
@@ -39,6 +40,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NovelServiceClient interface {
 	GetNovel(ctx context.Context, in *GetNovelRequest, opts ...grpc.CallOption) (*Novel, error)
+	GetNovelsByIds(ctx context.Context, in *GetNovelsByIdsRequest, opts ...grpc.CallOption) (*GetNovelsByIdsResponse, error)
 	ListNovels(ctx context.Context, in *ListNovelsRequest, opts ...grpc.CallOption) (*ListNovelsResponse, error)
 	CreateNovel(ctx context.Context, in *CreateNovelRequest, opts ...grpc.CallOption) (*Novel, error)
 	UpdateNovel(ctx context.Context, in *UpdateNovelRequest, opts ...grpc.CallOption) (*Novel, error)
@@ -65,6 +67,16 @@ func (c *novelServiceClient) GetNovel(ctx context.Context, in *GetNovelRequest, 
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Novel)
 	err := c.cc.Invoke(ctx, NovelService_GetNovel_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *novelServiceClient) GetNovelsByIds(ctx context.Context, in *GetNovelsByIdsRequest, opts ...grpc.CallOption) (*GetNovelsByIdsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetNovelsByIdsResponse)
+	err := c.cc.Invoke(ctx, NovelService_GetNovelsByIds_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -196,6 +208,7 @@ func (c *novelServiceClient) DeleteGenre(ctx context.Context, in *DeleteGenreReq
 // for forward compatibility.
 type NovelServiceServer interface {
 	GetNovel(context.Context, *GetNovelRequest) (*Novel, error)
+	GetNovelsByIds(context.Context, *GetNovelsByIdsRequest) (*GetNovelsByIdsResponse, error)
 	ListNovels(context.Context, *ListNovelsRequest) (*ListNovelsResponse, error)
 	CreateNovel(context.Context, *CreateNovelRequest) (*Novel, error)
 	UpdateNovel(context.Context, *UpdateNovelRequest) (*Novel, error)
@@ -220,6 +233,9 @@ type UnimplementedNovelServiceServer struct{}
 
 func (UnimplementedNovelServiceServer) GetNovel(context.Context, *GetNovelRequest) (*Novel, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetNovel not implemented")
+}
+func (UnimplementedNovelServiceServer) GetNovelsByIds(context.Context, *GetNovelsByIdsRequest) (*GetNovelsByIdsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetNovelsByIds not implemented")
 }
 func (UnimplementedNovelServiceServer) ListNovels(context.Context, *ListNovelsRequest) (*ListNovelsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListNovels not implemented")
@@ -292,6 +308,24 @@ func _NovelService_GetNovel_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NovelServiceServer).GetNovel(ctx, req.(*GetNovelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NovelService_GetNovelsByIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetNovelsByIdsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NovelServiceServer).GetNovelsByIds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NovelService_GetNovelsByIds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NovelServiceServer).GetNovelsByIds(ctx, req.(*GetNovelsByIdsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -524,6 +558,10 @@ var NovelService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _NovelService_GetNovel_Handler,
 		},
 		{
+			MethodName: "GetNovelsByIds",
+			Handler:    _NovelService_GetNovelsByIds_Handler,
+		},
+		{
 			MethodName: "ListNovels",
 			Handler:    _NovelService_ListNovels_Handler,
 		},
@@ -573,5 +611,5 @@ var NovelService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "novel.proto",
+	Metadata: "proto/novel/v1/novel.proto",
 }
