@@ -69,3 +69,52 @@ func (r *PostgresUserRepo) scanUser(row pgx.Row) (*domain.User, error) {
 	}
 	return &u, nil
 }
+
+func (r *PostgresUserRepo) ListAll(page, pageSize int) ([]*domain.User, int, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 50
+	}
+
+	var total int
+	r.pool.QueryRow(context.Background(), "SELECT COUNT(*) FROM users").Scan(&total)
+
+	offset := (page - 1) * pageSize
+	rows, err := r.pool.Query(context.Background(),
+		"SELECT id, username, email, password_hash, avatar_url, role, created_at FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+		pageSize, offset,
+	)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var users []*domain.User
+	for rows.Next() {
+		var u domain.User
+		if err := rows.Scan(&u.ID, &u.Username, &u.Email, &u.PasswordHash, &u.AvatarURL, &u.Role, &u.CreatedAt); err != nil {
+			return nil, 0, err
+		}
+		users = append(users, &u)
+	}
+	return users, total, nil
+}
+
+func (r *PostgresUserRepo) UpdateRole(id, role string) error {
+	// Security: only allow valid roles
+	if role != "admin" && role != "reader" {
+		return errors.New("invalid role: must be 'admin' or 'reader'")
+	}
+	tag, err := r.pool.Exec(context.Background(),
+		"UPDATE users SET role = $1 WHERE id = $2", role, id,
+	)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return domain.ErrUserNotFound
+	}
+	return nil
+}

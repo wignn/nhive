@@ -30,4 +30,6 @@ type UserRepository interface {
 	GetByUsername(username string) (*User, error)
 	ExistsByEmail(email string) (bool, error)
 	ExistsByUsername(username string) (bool, error)
+	ListAll(page, pageSize int) ([]*User, int, error)
+	UpdateRole(id, role string) error
 }

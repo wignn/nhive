@@ -86,6 +86,18 @@ func (uc *UserUsecase) GetProfile(userID string) (*domain.User, error) {
 	return uc.repo.GetByID(userID)
 }
 
+func (uc *UserUsecase) ListUsers(page, pageSize int) ([]*domain.User, int, error) {
+	return uc.repo.ListAll(page, pageSize)
+}
+
+func (uc *UserUsecase) UpdateUserRole(userID, role string) error {
+	// Security: validate allowed roles
+	if role != "admin" && role != "reader" {
+		return domain.ErrInvalidInput
+	}
+	return uc.repo.UpdateRole(userID, role)
+}
+
 func (uc *UserUsecase) ValidateToken(tokenStr string) (string, string, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

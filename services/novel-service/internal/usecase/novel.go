@@ -116,6 +116,18 @@ func (uc *NovelUsecase) ListGenres() ([]domain.Genre, error) {
 	return uc.genreRepo.List()
 }
 
+func (uc *NovelUsecase) CreateGenre(name string) (*domain.Genre, error) {
+	if strings.TrimSpace(name) == "" {
+		return nil, domain.ErrInvalidInput
+	}
+	slugStr := slug.Make(name)
+	return uc.genreRepo.Create(name, slugStr)
+}
+
+func (uc *NovelUsecase) DeleteGenre(id int) error {
+	return uc.genreRepo.Delete(id)
+}
+
 func (uc *NovelUsecase) GetNovelByID(id string) (*domain.Novel, error) {
 	return uc.novelRepo.GetByID(id)
 }

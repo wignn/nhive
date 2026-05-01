@@ -75,4 +75,6 @@ type ChapterRepository interface {
 type GenreRepository interface {
 	List() ([]Genre, error)
 	GetByID(id int) (*Genre, error)
+	Create(name, slug string) (*Genre, error)
+	Delete(id int) error
 }

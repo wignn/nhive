@@ -4,11 +4,11 @@ WORKDIR /app
 
 COPY proto/ /proto/
 COPY pkg/ /pkg/
-COPY novel-service/go.mod novel-service/go.sum* ./
+COPY services/novel-service/go.mod services/novel-service/go.sum* ./
 
 RUN go mod download
 
-COPY novel-service/ .
+COPY services/novel-service/ .
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s" \

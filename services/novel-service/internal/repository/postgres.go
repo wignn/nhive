@@ -290,3 +290,26 @@ func (r *PostgresGenreRepo) GetByID(id int) (*domain.Genre, error) {
 	}
 	return &g, nil
 }
+
+func (r *PostgresGenreRepo) Create(name, slug string) (*domain.Genre, error) {
+	var g domain.Genre
+	err := r.pool.QueryRow(context.Background(),
+		"INSERT INTO genres (name, slug) VALUES ($1, $2) RETURNING id, name, slug",
+		name, slug,
+	).Scan(&g.ID, &g.Name, &g.Slug)
+	if err != nil {
+		return nil, err
+	}
+	return &g, nil
+}
+
+func (r *PostgresGenreRepo) Delete(id int) error {
+	tag, err := r.pool.Exec(context.Background(), "DELETE FROM genres WHERE id = $1", id)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("genre not found")
+	}
+	return nil
+}

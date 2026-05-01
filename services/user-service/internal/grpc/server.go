@@ -83,6 +83,52 @@ func (s *UserServiceServer) ValidateToken(ctx context.Context, req *userv1.Valid
 	}, nil
 }
 
+func (s *UserServiceServer) ListUsers(ctx context.Context, req *userv1.ListUsersRequest) (*userv1.ListUsersResponse, error) {
+	page := int(req.Page)
+	if page < 1 {
+		page = 1
+	}
+	pageSize := int(req.PageSize)
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 50
+	}
+
+	users, total, err := s.uc.ListUsers(page, pageSize)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var profiles []*userv1.UserProfile
+	for _, u := range users {
+		profiles = append(profiles, &userv1.UserProfile{
+			Id:        u.ID,
+			Username:  u.Username,
+			Email:     u.Email,
+			AvatarUrl: u.AvatarURL,
+			Role:      u.Role,
+			CreatedAt: u.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		})
+	}
+	return &userv1.ListUsersResponse{
+		Users: profiles,
+		Total: int32(total),
+	}, nil
+}
+
+func (s *UserServiceServer) UpdateUserRole(ctx context.Context, req *userv1.UpdateUserRoleRequest) (*userv1.UpdateUserRoleResponse, error) {
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+	// Security: validate role at gRPC boundary
+	if req.Role != "admin" && req.Role != "reader" {
+		return nil, status.Error(codes.InvalidArgument, "role must be 'admin' or 'reader'")
+	}
+	if err := s.uc.UpdateUserRole(req.UserId, req.Role); err != nil {
+		return nil, mapDomainError(err)
+	}
+	return &userv1.UpdateUserRoleResponse{Success: true}, nil
+}
+
 func mapDomainError(err error) error {
 	switch err {
 	case domain.ErrUserNotFound:

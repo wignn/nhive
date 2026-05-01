@@ -204,6 +204,29 @@ func (s *NovelServiceServer) ListGenres(ctx context.Context, req *novelv1.ListGe
 	return &novelv1.ListGenresResponse{Genres: protoGenres}, nil
 }
 
+func (s *NovelServiceServer) CreateGenre(ctx context.Context, req *novelv1.CreateGenreRequest) (*novelv1.Genre, error) {
+	g, err := s.uc.CreateGenre(req.Name)
+	if err != nil {
+		if err == domain.ErrInvalidInput {
+			return nil, status.Error(codes.InvalidArgument, "invalid genre name")
+		}
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &novelv1.Genre{
+		Id:   int32(g.ID),
+		Name: g.Name,
+		Slug: g.Slug,
+	}, nil
+}
+
+func (s *NovelServiceServer) DeleteGenre(ctx context.Context, req *novelv1.DeleteGenreRequest) (*novelv1.DeleteGenreResponse, error) {
+	if err := s.uc.DeleteGenre(int(req.Id)); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &novelv1.DeleteGenreResponse{Success: true}, nil
+}
+
+
 // --- Helpers ---
 
 func toProtoNovel(n *domain.Novel) *novelv1.Novel {
