@@ -6,11 +6,11 @@ COPY proto/ /proto/
 
 COPY pkg/ /pkg/
 
-COPY library-service/go.mod library-service/go.sum* ./
+COPY services/library-service/go.mod services/library-service/go.sum* ./
 
 RUN go mod download
 
-COPY library-service/ .
+COPY services/library-service/ .
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s" \

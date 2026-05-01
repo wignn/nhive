@@ -33,10 +33,10 @@ logs-%:
 # Run database migrations for all Go services
 migrate:
 	@echo "Running migrations..."
-	cd user-service && go run cmd/migrate/main.go
-	cd novel-service && go run cmd/migrate/main.go
-	cd comment-service && go run cmd/migrate/main.go
-	cd library-service && go run cmd/migrate/main.go
+	cd services/user-service && go run cmd/migrate/main.go
+	cd services/novel-service && go run cmd/migrate/main.go
+	cd services/comment-service && go run cmd/migrate/main.go
+	cd services/library-service && go run cmd/migrate/main.go
 	@echo "Migrations complete."
 
 # Seed sample data
@@ -47,25 +47,25 @@ seed:
 
 # Build individual services
 build-gateway:
-	cd gateway && go build -o bin/gateway cmd/gateway/main.go
+	cd services/gateway && go build -o bin/gateway cmd/gateway/main.go
 
 build-user:
-	cd user-service && go build -o bin/server cmd/server/main.go
+	cd services/user-service && go build -o bin/server cmd/server/main.go
 
 build-novel:
-	cd novel-service && go build -o bin/server cmd/server/main.go
+	cd services/novel-service && go build -o bin/server cmd/server/main.go
 
 build-content:
-	cd content-service && cargo build --release
+	cd services/content-service && cargo build --release
 
 build-search:
-	cd search-service && cargo build --release
+	cd services/search-service && cargo build --release
 
 build-comment:
-	cd comment-service && go build -o bin/server cmd/server/main.go
+	cd services/comment-service && go build -o bin/server cmd/server/main.go
 
 build-library:
-	cd library-service && go build -o bin/server cmd/server/main.go
+	cd services/library-service && go build -o bin/server cmd/server/main.go
 
 # Build all Go services
 build-go: build-gateway build-user build-novel build-comment build-library
@@ -78,13 +78,13 @@ build-all: build-go build-rust
 
 # Test
 test:
-	cd gateway && go test ./...
-	cd user-service && go test ./...
-	cd novel-service && go test ./...
-	cd comment-service && go test ./...
-	cd library-service && go test ./...
-	cd content-service && cargo test
-	cd search-service && cargo test
+	cd services/gateway && go test ./...
+	cd services/user-service && go test ./...
+	cd services/novel-service && go test ./...
+	cd services/comment-service && go test ./...
+	cd services/library-service && go test ./...
+	cd services/content-service && cargo test
+	cd services/search-service && cargo test
 
 # Tidy all Go modules (including shared packages)
 tidy:
@@ -92,8 +92,8 @@ tidy:
 	cd pkg/config && go mod tidy
 	cd pkg/grpclog && go mod tidy
 	cd pkg/grpcauth && go mod tidy
-	cd gateway && go mod tidy
-	cd user-service && go mod tidy
-	cd novel-service && go mod tidy
-	cd comment-service && go mod tidy
-	cd library-service && go mod tidy
+	cd services/gateway && go mod tidy
+	cd services/user-service && go mod tidy
+	cd services/novel-service && go mod tidy
+	cd services/comment-service && go mod tidy
+	cd services/library-service && go mod tidy

@@ -11,8 +11,8 @@ RUN apt-get update && apt-get install -y \
 
  FROM chef AS planner
 
-COPY content-service/Cargo.toml Cargo.toml
-COPY content-service/crates crates
+COPY services/content-service/Cargo.toml Cargo.toml
+COPY services/content-service/crates crates
 
 RUN cargo chef prepare --recipe-path recipe.json
 
@@ -22,7 +22,7 @@ COPY --from=planner /app/recipe.json recipe.json
 
 RUN cargo chef cook --release --recipe-path recipe.json
 
-COPY content-service/ .
+COPY services/content-service/ .
 
 RUN cargo build --release --package content-grpc-server
 

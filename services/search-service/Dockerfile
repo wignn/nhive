@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y \
 
 FROM chef AS planner
 
-COPY search-service/Cargo.toml Cargo.toml
-COPY search-service/crates crates
+COPY services/search-service/Cargo.toml Cargo.toml
+COPY services/search-service/crates crates
 
 RUN cargo chef prepare --recipe-path recipe.json
 
@@ -21,7 +21,7 @@ COPY --from=planner /app/recipe.json recipe.json
 
 RUN cargo chef cook --release --recipe-path recipe.json
 
-COPY search-service/ .
+COPY services/search-service/ .
 
 RUN cargo build --release --package search-grpc-server
 

@@ -6,11 +6,11 @@ COPY proto/ /proto/
 
 COPY pkg/ /pkg/
 
-COPY comment-service/go.mod comment-service/go.sum* ./
+COPY services/comment-service/go.mod services/comment-service/go.sum* ./
 
 RUN go mod download
 
-COPY comment-service/ .
+COPY services/comment-service/ .
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s" \

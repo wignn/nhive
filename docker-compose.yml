@@ -73,7 +73,7 @@ services:
   user-service:
     build:
       context: .
-      dockerfile: user-service/Dockerfile
+      dockerfile: services/user-service/Dockerfile
     container_name: novelhive-user-service
     image: wign/nhive-user-service
     restart: unless-stopped
@@ -96,7 +96,7 @@ services:
   novel-service:
     build:
       context: .
-      dockerfile: novel-service/Dockerfile
+      dockerfile: services/novel-service/Dockerfile
     container_name: novelhive-novel-service
     image: wign/nhive-novel-service
     restart: unless-stopped
@@ -121,7 +121,7 @@ services:
   content-service:
     build:
       context: .
-      dockerfile: content-service/Dockerfile
+      dockerfile: services/content-service/Dockerfile
     container_name: novelhive-content-service
     image: wign/nhive-content-service
     restart: unless-stopped
@@ -142,7 +142,7 @@ services:
   search-service:
     build:
       context: .
-      dockerfile: search-service/Dockerfile
+      dockerfile: services/search-service/Dockerfile
     container_name: novelhive-search-service
     image: wign/nhive-search-service
     restart: unless-stopped
@@ -166,7 +166,7 @@ services:
   comment-service:
     build:
       context: .
-      dockerfile: comment-service/Dockerfile
+      dockerfile: services/comment-service/Dockerfile
     container_name: novelhive-comment-service
     image: wign/nhive-comment-service
     restart: unless-stopped
@@ -188,7 +188,7 @@ services:
   library-service:
     build:
       context: .
-      dockerfile: library-service/Dockerfile
+      dockerfile: services/library-service/Dockerfile
     container_name: novelhive-library-service
     image: wign/nhive-library-service
     restart: unless-stopped
@@ -207,7 +207,7 @@ services:
   gateway:
     build:
       context: .
-      dockerfile: gateway/Dockerfile
+      dockerfile: services/gateway/Dockerfile
     container_name: novelhive-gateway
     image: wign/nhive-gateway
     restart: unless-stopped
@@ -219,7 +219,7 @@ services:
       - comment-service
       - library-service
     env_file:
-      - ./gateway/.env
+      - ./services/gateway/.env
     environment:
       USER_SERVICE_ADDR: user-service:50051
       NOVEL_SERVICE_ADDR: novel-service:50052
