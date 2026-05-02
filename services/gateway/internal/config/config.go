@@ -1,11 +1,15 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
 type Config struct {
-	HTTPPort      string
-	JWTSecret     string
+	HTTPPort       string
+	JWTSecret      string
 	InternalAPIKey string
+	GatewayAPIKeys []string
 
 	// gRPC service addresses
 	UserServiceAddr    string
@@ -27,6 +31,7 @@ func Load() *Config {
 		HTTPPort:       getEnv("HTTP_PORT", "8080"),
 		JWTSecret:      getEnv("JWT_SECRET", "novelhive-dev-secret"),
 		InternalAPIKey: getEnv("INTERNAL_API_KEY", ""),
+		GatewayAPIKeys: getCSVEnv("GATEWAY_API_KEYS"),
 
 		UserServiceAddr:    getEnv("USER_SERVICE_ADDR", "localhost:50051"),
 		NovelServiceAddr:   getEnv("NOVEL_SERVICE_ADDR", "localhost:50052"),
@@ -49,3 +54,19 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
+func getCSVEnv(key string) []string {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return nil
+	}
+
+	parts := strings.Split(raw, ",")
+	values := make([]string, 0, len(parts))
+	for _, part := range parts {
+		value := strings.TrimSpace(part)
+		if value != "" {
+			values = append(values, value)
+		}
+	}
+	return values
+}

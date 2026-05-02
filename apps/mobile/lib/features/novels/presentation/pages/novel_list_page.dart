@@ -90,7 +90,9 @@ class _HomeView extends StatelessWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverAppBar(
-                floating: true,
+                pinned: true,
+                backgroundColor: AppTheme.background,
+                elevation: 0,
                 title: ShaderMask(
                   shaderCallback: (bounds) => AppTheme.brandGradient.createShader(bounds),
                   child: const Text(

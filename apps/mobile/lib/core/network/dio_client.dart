@@ -18,10 +18,6 @@ class DioClient {
           ),
         ) {
     _dio.interceptors.add(authInterceptor);
-    _dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-    ));
   }
 
   Dio get dio => _dio;

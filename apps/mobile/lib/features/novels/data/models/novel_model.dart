@@ -17,9 +17,7 @@ class NovelModel extends Novel {
     super.createdAt,
   });
 
-  factory NovelModel.fromJson(Map<String, dynamic> json) {
-    final rawCover = json['cover_url'] as String?;
-    final resolvedCover = ApiConstants.resolveCoverUrl(rawCover);
+  factory NovelModel.fromJson(Map<String, dynamic> json, {String? coverBaseUrl}) {
 
     final genresRaw = json['genres'];
     final genres = <Genre>[];
@@ -33,13 +31,20 @@ class NovelModel extends Novel {
       }
     }
 
+    String? coverUrl = json['cover_url'];
+    if (coverUrl != null && coverBaseUrl != null && !coverUrl.startsWith('http')) {
+      final base = coverBaseUrl.endsWith('/') ? coverBaseUrl.substring(0, coverBaseUrl.length - 1) : coverBaseUrl;
+      final path = coverUrl.startsWith('/') ? coverUrl : '/$coverUrl';
+      coverUrl = '$base$path';
+    }
+
     return NovelModel(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
       slug: json['slug'] ?? '',
       description: json['synopsis'] ?? json['description'] ?? '',
-      coverUrl: resolvedCover,
       author: json['author'] ?? '',
+      coverUrl: coverUrl,
       genres: genres,
       status: json['status'] ?? '',
       views: json['views'] ?? 0,

@@ -12,7 +12,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// Clients holds all gRPC service clients.
 type Clients struct {
 	Novel   novelv1.NovelServiceClient
 	User    userv1.UserServiceClient
@@ -22,9 +21,6 @@ type Clients struct {
 	conns []*grpc.ClientConn
 }
 
-// New creates gRPC clients to all downstream microservices.
-// apiKey is injected as x-internal-key metadata on every call so that
-// services can reject calls that don't originate from the gateway.
 func New(userAddr, novelAddr, commentAddr, libraryAddr, apiKey string) *Clients {
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),

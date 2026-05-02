@@ -226,6 +226,7 @@ services:
       COMMENT_SERVICE_ADDR: comment-service:50055
       LIBRARY_SERVICE_ADDR: library-service:50056
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      GATEWAY_API_KEYS: ${GATEWAY_API_KEYS}
       APP_ENV: production
       LOG_LEVEL: info
     ports:

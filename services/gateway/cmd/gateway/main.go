@@ -56,7 +56,6 @@ func main() {
 
 	r := chi.NewRouter()
 
-	// Global middlewares — SEMUA harus sebelum routes
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
 	r.Use(chimw.RealIP)
@@ -64,7 +63,7 @@ func main() {
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-API-Key"},
 		AllowCredentials: false,
 	}))
 
@@ -75,6 +74,8 @@ func main() {
 	})
 
 	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(middleware.APIKeyMiddleware(cfg.GatewayAPIKeys))
+
 		// Public routes
 		r.Group(func(r chi.Router) {
 			r.Post("/auth/register", h.Register)

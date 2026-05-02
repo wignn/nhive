@@ -30,8 +30,9 @@ class LibraryProvider extends ChangeNotifier {
     try {
       final response = await _client.get(ApiConstants.library);
       final data = response.data;
+      final coverBaseUrl = data['cover_base_url'] as String?;
       final novels = data['novels'] as List? ?? data['bookmarks'] as List? ?? [];
-      _bookmarks = novels.map<Novel>((j) => NovelModel.fromJson(j)).toList();
+      _bookmarks = novels.map<Novel>((j) => NovelModel.fromJson(j, coverBaseUrl: coverBaseUrl)).toList();
       _bookmarkedIds = _bookmarks.map((n) => n.id).toSet();
     } catch (e) {
       _error = e.toString();

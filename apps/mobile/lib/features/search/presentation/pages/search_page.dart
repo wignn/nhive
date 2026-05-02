@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:mobile/app/theme/app_theme.dart';
 import 'package:mobile/features/novels/presentation/bloc/novel_provider.dart';
 import 'package:mobile/features/novels/presentation/widgets/novel_card.dart';
+import 'package:mobile/features/novels/domain/entities/novel.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -16,6 +17,7 @@ class _SearchPageState extends State<SearchPage> {
   final _searchController = TextEditingController();
   final _focusNode = FocusNode();
   Timer? _debounce;
+  String? _selectedGenre;
 
   @override
   void dispose() {
@@ -82,12 +84,66 @@ class _SearchPageState extends State<SearchPage> {
               ),
             ),
 
+            // ─── Genre Filters ───
+            Consumer<NovelProvider>(
+              builder: (context, provider, _) {
+                final allGenres = <String>{};
+                for (var n in provider.novels) {
+                  for (var g in n.genres) {
+                    allGenres.add(g.name);
+                  }
+                }
+                final genresList = allGenres.toList()..sort();
+
+                if (genresList.isEmpty) return const SizedBox.shrink();
+
+                return SizedBox(
+                  height: 40,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: genresList.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final genre = genresList[index];
+                      final isSelected = _selectedGenre == genre;
+                      return ChoiceChip(
+                        label: Text(genre),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            _selectedGenre = selected ? genre : null;
+                          });
+                        },
+                        selectedColor: AppTheme.primary.withOpacity(0.2),
+                        backgroundColor: AppTheme.surface,
+                        labelStyle: TextStyle(
+                          color: isSelected ? AppTheme.primary : AppTheme.muted,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        side: BorderSide(
+                          color: isSelected ? AppTheme.primary : AppTheme.border,
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+
             // ─── Results ───
             Expanded(
               child: Consumer<NovelProvider>(
                 builder: (context, provider, _) {
-                  if (provider.searchQuery.isEmpty) {
-                    return _buildEmptyState();
+                  List<Novel> displayNovels = provider.searchQuery.isEmpty
+                      ? provider.novels
+                      : provider.searchResults;
+
+                  if (_selectedGenre != null) {
+                    displayNovels = displayNovels
+                        .where((n) => n.genres.any((g) => g.name == _selectedGenre))
+                        .toList();
                   }
 
                   if (provider.isSearching) {
@@ -96,7 +152,7 @@ class _SearchPageState extends State<SearchPage> {
                     );
                   }
 
-                  if (provider.searchResults.isEmpty) {
+                  if (displayNovels.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -104,13 +160,8 @@ class _SearchPageState extends State<SearchPage> {
                           Icon(Icons.search_off, size: 64, color: AppTheme.muted.withOpacity(0.4)),
                           const SizedBox(height: 16),
                           Text(
-                            'No results for "${provider.searchQuery}"',
+                            'No novels found',
                             style: const TextStyle(color: AppTheme.muted, fontSize: 16),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Try different keywords',
-                            style: TextStyle(color: AppTheme.muted, fontSize: 13),
                           ),
                         ],
                       ),
@@ -125,9 +176,9 @@ class _SearchPageState extends State<SearchPage> {
                       crossAxisSpacing: 12,
                       childAspectRatio: 0.52,
                     ),
-                    itemCount: provider.searchResults.length,
+                    itemCount: displayNovels.length,
                     itemBuilder: (context, index) {
-                      final novel = provider.searchResults[index];
+                      final novel = displayNovels[index];
                       return NovelCard(
                         novel: novel,
                         onTap: () => Navigator.pushNamed(context, '/detail', arguments: novel.slug),
@@ -143,32 +194,4 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Icon(Icons.search, size: 40, color: AppTheme.primary),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Discover Novels',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Search by title, author, or genre',
-            style: TextStyle(color: AppTheme.muted, fontSize: 14),
-          ),
-        ],
-      ),
-    );
-  }
 }

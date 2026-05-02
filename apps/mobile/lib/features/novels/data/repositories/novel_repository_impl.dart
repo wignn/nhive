@@ -13,15 +13,17 @@ class NovelRepositoryImpl implements NovelRepository {
   @override
   Future<List<Novel>> getNovels({int page = 1, int pageSize = 18, String sort = 'updated'}) async {
     final data = await remoteDataSource.getNovels(page: page, pageSize: pageSize, sort: sort);
+    final coverBaseUrl = data['cover_base_url'] as String?;
     final novels = data['novels'] as List? ?? [];
-    return novels.map((j) => NovelModel.fromJson(j)).toList();
+    return novels.map((j) => NovelModel.fromJson(j, coverBaseUrl: coverBaseUrl)).toList();
   }
 
   @override
   Future<Novel> getNovelDetail(String slug) async {
     final data = await remoteDataSource.getNovelDetail(slug);
+    final coverBaseUrl = data['cover_base_url'] as String?;
     final novelJson = data['novel'] ?? data;
-    return NovelModel.fromJson(novelJson);
+    return NovelModel.fromJson(novelJson, coverBaseUrl: coverBaseUrl);
   }
 
   @override
@@ -41,7 +43,8 @@ class NovelRepositoryImpl implements NovelRepository {
   @override
   Future<List<Novel>> searchNovels(String query) async {
     final data = await remoteDataSource.searchNovels(query);
+    final coverBaseUrl = data['cover_base_url'] as String?;
     final novels = data['novels'] as List? ?? [];
-    return novels.map((j) => NovelModel.fromJson(j)).toList();
+    return novels.map((j) => NovelModel.fromJson(j, coverBaseUrl: coverBaseUrl)).toList();
   }
 }
