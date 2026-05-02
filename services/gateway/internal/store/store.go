@@ -12,7 +12,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// --- Models ---
 
 type User struct {
 	ID           string    `json:"id"`
@@ -78,8 +77,6 @@ type ReadingProgress struct {
 	ScrollPosition int    `json:"scroll_position"`
 }
 
-// --- Store ---
-
 type Store struct {
 	mu       sync.RWMutex
 	users    map[string]*User
@@ -120,7 +117,6 @@ func hashPassword(pw string) string {
 	return string(h)
 }
 
-// --- Auth ---
 
 func (s *Store) CreateUser(username, email, password, role string) (*User, error) {
 	s.mu.Lock()
@@ -188,8 +184,6 @@ func (s *Store) UpdateUserRole(id, role string) error {
 	u.Role = role
 	return nil
 }
-
-// --- Novels ---
 
 func (s *Store) CreateNovel(n *Novel) error {
 	s.mu.Lock()
@@ -311,8 +305,6 @@ func (s *Store) DeleteNovel(id string) error {
 	return nil
 }
 
-// --- Chapters ---
-
 func (s *Store) CreateChapter(ch *Chapter) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -417,8 +409,6 @@ func (s *Store) DeleteChapter(id string) error {
 	return fmt.Errorf("chapter not found")
 }
 
-// --- Comments ---
-
 func (s *Store) CreateComment(c *Comment) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -446,7 +436,6 @@ func (s *Store) LikeComment(commentID string) {
 	}
 }
 
-// --- Library ---
 
 func (s *Store) AddToLibrary(userID, novelID string) error {
 	s.mu.Lock()
@@ -499,8 +488,6 @@ func (s *Store) GetProgress(userID, novelID string) *ReadingProgress {
 	defer s.mu.RUnlock()
 	return s.progress[userID+":"+novelID]
 }
-
-// --- Search ---
 
 func (s *Store) SearchNovels(q string) []*Novel {
 	s.mu.RLock()

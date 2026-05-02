@@ -223,7 +223,6 @@ func (h *Handlers) GetNovel(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) ListChapters(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-	// First get novel to get its ID
 	novel, err := h.Clients.Novel.GetNovel(r.Context(), &novelv1.GetNovelRequest{Slug: slug})
 	if err != nil {
 		writeError(w, 404, "novel not found")
@@ -286,8 +285,6 @@ func (h *Handlers) ReadChapter(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ─── Search ──────────────────────────────────────────────────────────────────
-
 func (h *Handlers) Search(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
 	if q == "" {
@@ -329,7 +326,6 @@ func (h *Handlers) Autocomplete(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]interface{}{"suggestions": suggestions})
 }
 
-// ─── Genres ──────────────────────────────────────────────────────────────────
 
 func (h *Handlers) ListGenres(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.Clients.Novel.ListGenres(r.Context(), &novelv1.ListGenresRequest{})
@@ -337,7 +333,6 @@ func (h *Handlers) ListGenres(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]interface{}{"genres": []interface{}{}})
 		return
 	}
-	// Return as simple string list for backwards compat
 	var genres []string
 	for _, g := range resp.Genres {
 		genres = append(genres, g.Name)
@@ -345,7 +340,6 @@ func (h *Handlers) ListGenres(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]interface{}{"genres": genres})
 }
 
-// ─── Comments ────────────────────────────────────────────────────────────────
 
 func (h *Handlers) ListComments(w http.ResponseWriter, r *http.Request) {
 	chapterID := chi.URLParam(r, "chapterId")
@@ -562,7 +556,6 @@ func (h *Handlers) GetLibraryEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Novel details (best-effort).
 	var novel map[string]interface{}
 	if novelsResp, err := h.Clients.Novel.GetNovelsByIds(r.Context(), &novelv1.GetNovelsByIdsRequest{Ids: []string{novelID}}); err == nil && novelsResp != nil {
 		if len(novelsResp.Novels) > 0 && novelsResp.Novels[0] != nil {

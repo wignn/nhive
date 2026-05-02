@@ -1,0 +1,2 @@
+// AuthStates
+abstract class AuthState {}

@@ -1,0 +1,2 @@
+// AuthEvents
+abstract class AuthEvent {}
