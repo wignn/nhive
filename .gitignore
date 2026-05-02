@@ -10,6 +10,7 @@ build/
 dist/
 .DS_Store
 
+.gocache
 # Node / Next.js
 node_modules/
 .next/
