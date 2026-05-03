@@ -41,10 +41,12 @@ class LibraryProvider extends ChangeNotifier {
     try {
       final response = await _client.get(ApiConstants.library);
       final data = response.data;
-      
-      final List novelsData = data is List ? data : (data['entries'] as List? ?? []);
+
+      final List novelsData = data is List
+          ? data
+          : (data['entries'] as List? ?? []);
       final coverBaseUrl = data is Map ? data['cover_base_url'] as String? : null;
-      
+
       _bookmarks = novelsData.map<Novel>((j) {
         // Map Gateway's flat library entry format to what NovelModel.fromJson expects
         final Map<String, dynamic> novelJson = {
@@ -57,7 +59,7 @@ class LibraryProvider extends ChangeNotifier {
         };
         return NovelModel.fromJson(novelJson, coverBaseUrl: coverBaseUrl);
       }).toList();
-      
+
       _bookmarkedIds = _bookmarks.map((n) => n.id).toSet();
     } catch (e) {
       _error = e.toString();

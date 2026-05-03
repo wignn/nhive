@@ -3,8 +3,8 @@ FROM golang:1.24-bookworm AS builder
 WORKDIR /app
 
 COPY proto/ /proto/
-
 COPY pkg/ /pkg/
+COPY services/notification-service/go.mod services/notification-service/go.sum* ./
 
 RUN go mod download
 
