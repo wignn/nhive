@@ -14,8 +14,10 @@ class AuthProvider extends ChangeNotifier {
   AuthProvider(this._repository, this._storage);
 
   void updateLibraryProvider(LibraryProvider libraryProvider) {
+    final isNewProvider = !identical(_libraryProvider, libraryProvider);
     _libraryProvider = libraryProvider;
-    if (_status == AuthStatus.authenticated) {
+
+    if (isNewProvider && _status == AuthStatus.authenticated) {
       _libraryProvider?.loadLibrary();
     }
   }
@@ -85,7 +87,7 @@ class AuthProvider extends ChangeNotifier {
     await _storage.clearAll();
     _user = null;
     _status = AuthStatus.unauthenticated;
-    _libraryProvider?.loadLibrary(); // Will clear bookmarks as it's unauthenticated
+    _libraryProvider?.clear();
     notifyListeners();
   }
 

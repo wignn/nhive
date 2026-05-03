@@ -18,66 +18,10 @@ import (
 	"github.com/novelhive/gateway/internal/storage"
 	commentv1 "github.com/novelhive/proto/comment/v1"
 	libraryv1 "github.com/novelhive/proto/library/v1"
-	notificationv1 "github.com/novelhive/proto/notification/v1"
 	novelv1 "github.com/novelhive/proto/novel/v1"
+	notificationv1 "github.com/novelhive/proto/notification/v1"
 	userv1 "github.com/novelhive/proto/user/v1"
 )
-...
-func (h *Handlers) GetNotifications(w http.ResponseWriter, r *http.Request) {
-	userID := middleware.GetUserID(r.Context())
-	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
-	pageSize, _ := strconv.Atoi(r.URL.Query().Get("page_size"))
-
-	resp, err := h.Clients.Notification.GetNotifications(r.Context(), &notificationv1.GetNotificationsRequest{
-		UserId:   userID,
-		Page:     int32(page),
-		PageSize: int32(pageSize),
-	})
-	if err != nil {
-		writeError(w, 500, "failed to get notifications")
-		return
-	}
-
-	writeJSON(w, 200, resp)
-}
-
-func (h *Handlers) MarkNotificationRead(w http.ResponseWriter, r *http.Request) {
-	userID := middleware.GetUserID(r.Context())
-	id := chi.URLParam(r, "id")
-
-	resp, err := h.Clients.Notification.MarkAsRead(r.Context(), &notificationv1.MarkAsReadRequest{
-		Id:     id,
-		UserId: userID,
-	})
-	if err != nil {
-		writeError(w, 500, "failed to mark notification as read")
-		return
-	}
-
-	writeJSON(w, 200, resp)
-}
-
-func (h *Handlers) RegisterFCMToken(w http.ResponseWriter, r *http.Request) {
-	userID := middleware.GetUserID(r.Context())
-	var req struct {
-		Token string `json:"token"`
-	}
-	if err := readJSON(r, &req); err != nil {
-		writeError(w, 400, "invalid request body")
-		return
-	}
-
-	resp, err := h.Clients.Notification.RegisterFCMToken(r.Context(), &notificationv1.RegisterFCMTokenRequest{
-		UserId: userID,
-		Token:  req.Token,
-	})
-	if err != nil {
-		writeError(w, 500, "failed to register FCM token")
-		return
-	}
-
-	writeJSON(w, 200, resp)
-}
 
 type Handlers struct {
 	Clients   *clients.Clients

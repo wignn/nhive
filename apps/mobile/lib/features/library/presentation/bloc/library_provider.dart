@@ -22,7 +22,17 @@ class LibraryProvider extends ChangeNotifier {
 
   bool isBookmarked(String novelId) => _bookmarkedIds.contains(novelId);
 
+  void clear() {
+    _bookmarks = [];
+    _bookmarkedIds = {};
+    _error = null;
+    _isLoading = false;
+    notifyListeners();
+  }
+
   Future<void> loadLibrary() async {
+    if (_isLoading) return;
+
     // Reset state but keep old data to prevent flickering if possible
     _isLoading = true;
     _error = null;
@@ -32,14 +42,20 @@ class LibraryProvider extends ChangeNotifier {
       final response = await _client.get(ApiConstants.library);
       final data = response.data;
       
-      // Gateway response for GetLibrary usually has 'entries' and 'total'
-      // Or it might be a direct list. Let's handle both for safety.
       final List novelsData = data is List ? data : (data['entries'] as List? ?? []);
+      final coverBaseUrl = data is Map ? data['cover_base_url'] as String? : null;
       
       _bookmarks = novelsData.map<Novel>((j) {
-        // Handle novel object nesting if Gateway wraps it
-        final novelJson = j['novel'] ?? j;
-        return NovelModel.fromJson(novelJson);
+        // Map Gateway's flat library entry format to what NovelModel.fromJson expects
+        final Map<String, dynamic> novelJson = {
+          'id': j['novel_id'] ?? j['id'] ?? '',
+          'title': j['novel_title'] ?? j['title'] ?? 'Unknown',
+          'slug': j['novel_slug'] ?? j['slug'] ?? '',
+          'cover_url': j['cover_url'],
+          'author': j['author'] ?? '',
+          'total_chapters': j['total'] ?? j['total_chapters'] ?? 0,
+        };
+        return NovelModel.fromJson(novelJson, coverBaseUrl: coverBaseUrl);
       }).toList();
       
       _bookmarkedIds = _bookmarks.map((n) => n.id).toSet();
