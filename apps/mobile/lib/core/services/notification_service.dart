@@ -1,7 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:nhive/core/constants/api_constants.dart';
 import 'package:nhive/core/network/dio_client.dart';
 import 'package:nhive/core/storage/secure_storage.dart';
-import 'dart:io';
 
 class NotificationService {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
@@ -43,13 +43,27 @@ class NotificationService {
     }
   }
 
+  Future<void> registerCurrentToken() async {
+    try {
+      final token = await _fcm.getToken();
+      if (token != null) {
+        await _registerToken(token);
+      }
+    } catch (e) {
+      print('Failed to sync FCM Token: $e');
+    }
+  }
+
   Future<void> _registerToken(String token) async {
     // Only register if we have a JWT token (user is logged in)
     final jwtToken = await _storage.getToken();
     if (jwtToken == null || jwtToken.isEmpty) return;
 
     try {
-      await _dio.post('/notifications/fcm-token', data: {'token': token});
+      await _dio.post(
+        '${ApiConstants.notifications}/fcm-token',
+        data: {'token': token},
+      );
       print('FCM Token registered successfully');
     } catch (e) {
       print('Failed to register FCM Token: $e');
@@ -57,7 +71,9 @@ class NotificationService {
   }
 
   // Mandatory static handler for background messages
-  static Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  static Future<void> _firebaseMessagingBackgroundHandler(
+    RemoteMessage message,
+  ) async {
     print('Handling background message: ${message.messageId}');
   }
 }

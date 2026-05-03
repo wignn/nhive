@@ -36,7 +36,7 @@ class ServiceLocator {
     // Auth
     authRemoteDataSource = AuthRemoteDataSourceImpl(dioClient);
     authRepository = AuthRepositoryImpl(authRemoteDataSource, secureStorage);
-    authProvider = AuthProvider(authRepository, secureStorage);
+    authProvider = AuthProvider(authRepository, secureStorage, notificationService);
 
     // Novels
     novelRemoteDataSource = NovelRemoteDataSourceImpl(dioClient);

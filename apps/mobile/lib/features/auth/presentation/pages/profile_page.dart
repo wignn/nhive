@@ -164,7 +164,7 @@ class ProfilePage extends StatelessWidget {
                 icon: Icons.notifications_outlined,
                 title: 'Notifications',
                 subtitle: 'Manage alerts',
-                onTap: () {},
+                onTap: () => Navigator.pushNamed(context, '/notifications'),
               ),
               _buildSettingsTile(
                 icon: Icons.download_outlined,
