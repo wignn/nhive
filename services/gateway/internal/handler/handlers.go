@@ -18,8 +18,8 @@ import (
 	"github.com/novelhive/gateway/internal/storage"
 	commentv1 "github.com/novelhive/proto/comment/v1"
 	libraryv1 "github.com/novelhive/proto/library/v1"
-	novelv1 "github.com/novelhive/proto/novel/v1"
 	notificationv1 "github.com/novelhive/proto/notification/v1"
+	novelv1 "github.com/novelhive/proto/novel/v1"
 	userv1 "github.com/novelhive/proto/user/v1"
 )
 
@@ -327,7 +327,6 @@ func (h *Handlers) Autocomplete(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]interface{}{"suggestions": suggestions})
 }
 
-
 func (h *Handlers) ListGenres(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.Clients.Novel.ListGenres(r.Context(), &novelv1.ListGenresRequest{})
 	if err != nil {
@@ -340,7 +339,6 @@ func (h *Handlers) ListGenres(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, 200, map[string]interface{}{"genres": genres})
 }
-
 
 func (h *Handlers) ListComments(w http.ResponseWriter, r *http.Request) {
 	chapterID := chi.URLParam(r, "chapterId")
@@ -664,6 +662,63 @@ func (h *Handlers) SaveProgress(w http.ResponseWriter, r *http.Request) {
 		ScrollPosition: req.ScrollPosition,
 	})
 	writeJSON(w, 200, map[string]string{"status": "saved"})
+}
+
+func (h *Handlers) GetNotifications(w http.ResponseWriter, r *http.Request) {
+	uid := middleware.GetUserID(r.Context())
+	q := r.URL.Query()
+	page, _ := strconv.Atoi(q.Get("page"))
+	if page < 1 {
+		page = 1
+	}
+	pageSize, _ := strconv.Atoi(q.Get("page_size"))
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	resp, err := h.Clients.Notification.GetNotifications(r.Context(), &notificationv1.GetNotificationsRequest{
+		UserId:   uid,
+		Page:     int32(page),
+		PageSize: int32(pageSize),
+	})
+	if err != nil || resp == nil {
+		writeJSON(w, 200, map[string]interface{}{"notifications": []interface{}{}, "total": 0})
+		return
+	}
+	writeJSON(w, 200, map[string]interface{}{"notifications": resp.Notifications, "total": resp.Total})
+}
+
+func (h *Handlers) MarkNotificationRead(w http.ResponseWriter, r *http.Request) {
+	uid := middleware.GetUserID(r.Context())
+	resp, err := h.Clients.Notification.MarkAsRead(r.Context(), &notificationv1.MarkAsReadRequest{
+		Id:     chi.URLParam(r, "id"),
+		UserId: uid,
+	})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, 200, map[string]bool{"success": resp.GetSuccess()})
+}
+
+func (h *Handlers) RegisterFCMToken(w http.ResponseWriter, r *http.Request) {
+	uid := middleware.GetUserID(r.Context())
+	var req struct {
+		Token string `json:"token"`
+	}
+	if err := readJSON(r, &req); err != nil || strings.TrimSpace(req.Token) == "" {
+		writeError(w, 400, "token is required")
+		return
+	}
+	resp, err := h.Clients.Notification.RegisterFCMToken(r.Context(), &notificationv1.RegisterFCMTokenRequest{
+		UserId: uid,
+		Token:  strings.TrimSpace(req.Token),
+	})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, 200, map[string]bool{"success": resp.GetSuccess()})
 }
 
 func (h *Handlers) GetBookmarks(w http.ResponseWriter, r *http.Request) {
