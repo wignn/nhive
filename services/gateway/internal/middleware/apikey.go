@@ -5,9 +5,6 @@ import (
 	"net/http"
 )
 
-// APIKeyMiddleware validates the X-API-Key header on external HTTP requests.
-// The web app should inject this key server-side so the browser never sees it.
-// If apiKeys is empty (dev mode), the check is skipped and all requests pass through.
 func APIKeyMiddleware(apiKeys []string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

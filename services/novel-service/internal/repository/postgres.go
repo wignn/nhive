@@ -114,10 +114,15 @@ func (r *PostgresNovelRepo) List(params domain.ListNovelsParams) ([]*domain.Nove
 			&n.Author, &n.Status, &n.TotalChapters, &n.CreatedAt, &n.UpdatedAt); err != nil {
 			return nil, 0, err
 		}
-		genres, _ := r.getGenresForNovel(n.ID)
-		n.Genres = genres
 		novels = append(novels, n)
 	}
+	rows.Close() 
+	
+	for _, n := range novels {
+		genres, _ := r.getGenresForNovel(n.ID)
+		n.Genres = genres
+	}
+
 	return novels, total, nil
 }
 
