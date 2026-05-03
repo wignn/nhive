@@ -18,6 +18,6 @@ FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /bin/server /bin/server
 
-EXPOSE 50056
+EXPOSE 50057
 
 ENTRYPOINT ["/bin/server"]

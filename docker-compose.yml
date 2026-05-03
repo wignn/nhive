@@ -224,6 +224,7 @@ services:
       DATABASE_URL: postgres://novelhive:${POSTGRES_PASSWORD}@postgres:5432/novelhive_notifications?sslmode=disable
       NATS_URL: nats://nats:4222
       LIBRARY_SERVICE_ADDR: library-service:50056
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       FIREBASE_CREDENTIALS: /app/services/notification-service/nhive-71b46-firebase-adminsdk-fbsvc-4ae7717497.json
       APP_ENV: production
       LOG_LEVEL: info
@@ -242,6 +243,7 @@ services:
       - novel-service
       - comment-service
       - library-service
+      - notification-service
     env_file:
       - ./services/gateway/.env
     environment:
@@ -249,6 +251,7 @@ services:
       NOVEL_SERVICE_ADDR: novel-service:50052
       COMMENT_SERVICE_ADDR: comment-service:50055
       LIBRARY_SERVICE_ADDR: library-service:50056
+      NOTIFICATION_SERVICE_ADDR: notification-service:50057
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       GATEWAY_API_KEYS: ${GATEWAY_API_KEYS}
       APP_ENV: production

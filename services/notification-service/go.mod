@@ -6,6 +6,7 @@ require (
 	firebase.google.com/go/v4 v4.19.0
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/nats-io/nats.go v1.35.0
+	github.com/novelhive/pkg/grpcauth v0.0.0-00010101000000-000000000000
 	github.com/novelhive/pkg/logger v0.0.0
 	github.com/novelhive/proto v0.0.0
 	go.uber.org/zap v1.27.0
@@ -75,6 +76,7 @@ require (
 )
 
 replace (
+	github.com/novelhive/pkg/grpcauth => ../../pkg/grpcauth
 	github.com/novelhive/pkg/grpclog => ../../pkg/grpclog
 	github.com/novelhive/pkg/logger => ../../pkg/logger
 	github.com/novelhive/proto => ../../proto

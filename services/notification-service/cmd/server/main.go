@@ -13,6 +13,7 @@ import (
 	grpcserver "github.com/novelhive/notification-service/internal/grpc"
 	"github.com/novelhive/notification-service/internal/push"
 	"github.com/novelhive/notification-service/internal/repository"
+	"github.com/novelhive/pkg/grpcauth"
 	"github.com/novelhive/pkg/logger"
 	libraryv1 "github.com/novelhive/proto/library/v1"
 	notificationv1 "github.com/novelhive/proto/notification/v1"
@@ -40,7 +41,12 @@ func main() {
 	defer nc.Close()
 
 	libraryAddr := getEnv("LIBRARY_SERVICE_ADDR", "localhost:50056")
-	libConn, err := grpc.Dial(libraryAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	internalAPIKey := getEnv("INTERNAL_API_KEY", "")
+	libConn, err := grpc.Dial(
+		libraryAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithPerRPCCredentials(grpcauth.NewCredentials(internalAPIKey)),
+	)
 	if err != nil {
 		log.Fatal("failed to connect to library service", zap.Error(err))
 	}
@@ -50,9 +56,19 @@ func main() {
 	repo := repository.NewPostgresNotificationRepo(pool)
 
 	firebaseCreds := getEnv("FIREBASE_CREDENTIALS", "")
+	if firebaseCreds != "" {
+		if _, err := os.Stat(firebaseCreds); err != nil {
+			log.Warn("firebase credentials not found, push notifications disabled",
+				zap.String("path", firebaseCreds),
+				zap.Error(err),
+			)
+			firebaseCreds = ""
+		}
+	}
 	pusher, err := push.NewFirebasePusher(firebaseCreds)
 	if err != nil {
-		log.Fatal("failed to initialize firebase pusher", zap.Error(err))
+		log.Warn("failed to initialize firebase pusher, push notifications disabled", zap.Error(err))
+		pusher, _ = push.NewFirebasePusher("")
 	}
 
 	subscriber, err := events.NewNATSSubscriber(nc, repo, libraryClient, pusher, log)
