@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:mobile/core/storage/secure_storage.dart';
+import 'package:nhive/core/storage/secure_storage.dart';
 
 class AuthInterceptor extends Interceptor {
   final SecureStorage _storage;
@@ -7,7 +7,10 @@ class AuthInterceptor extends Interceptor {
   AuthInterceptor(this._storage);
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     final token = await _storage.getToken();
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';

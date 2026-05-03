@@ -49,5 +49,18 @@ class Novel extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, title, slug, description, coverUrl, author, genres, status, views, totalChapters, updatedAt, createdAt];
+  List<Object?> get props => [
+    id,
+    title,
+    slug,
+    description,
+    coverUrl,
+    author,
+    genres,
+    status,
+    views,
+    totalChapters,
+    updatedAt,
+    createdAt,
+  ];
 }

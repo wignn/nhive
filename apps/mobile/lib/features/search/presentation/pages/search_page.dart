@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/app/theme/app_theme.dart';
-import 'package:mobile/features/novels/presentation/bloc/novel_provider.dart';
-import 'package:mobile/features/novels/presentation/widgets/novel_card.dart';
-import 'package:mobile/features/novels/domain/entities/novel.dart';
+import 'package:nhive/app/theme/app_theme.dart';
+import 'package:nhive/features/novels/presentation/bloc/novel_provider.dart';
+import 'package:nhive/features/novels/presentation/widgets/novel_card.dart';
+import 'package:nhive/features/novels/domain/entities/novel.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -60,7 +60,10 @@ class _SearchPageState extends State<SearchPage> {
                   controller: _searchController,
                   focusNode: _focusNode,
                   onChanged: _onSearchChanged,
-                  style: const TextStyle(color: AppTheme.foreground, fontSize: 16),
+                  style: const TextStyle(
+                    color: AppTheme.foreground,
+                    fontSize: 16,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Search novels, authors...',
                     hintStyle: const TextStyle(color: AppTheme.muted),
@@ -72,13 +75,20 @@ class _SearchPageState extends State<SearchPage> {
                               context.read<NovelProvider>().clearSearch();
                               setState(() {});
                             },
-                            icon: const Icon(Icons.close, color: AppTheme.muted, size: 20),
+                            icon: const Icon(
+                              Icons.close,
+                              color: AppTheme.muted,
+                              size: 20,
+                            ),
                           )
                         : null,
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                   ),
                 ),
               ),
@@ -119,10 +129,14 @@ class _SearchPageState extends State<SearchPage> {
                         backgroundColor: AppTheme.surface,
                         labelStyle: TextStyle(
                           color: isSelected ? AppTheme.primary : AppTheme.muted,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                         side: BorderSide(
-                          color: isSelected ? AppTheme.primary : AppTheme.border,
+                          color: isSelected
+                              ? AppTheme.primary
+                              : AppTheme.border,
                         ),
                       );
                     },
@@ -142,7 +156,9 @@ class _SearchPageState extends State<SearchPage> {
 
                   if (_selectedGenre != null) {
                     displayNovels = displayNovels
-                        .where((n) => n.genres.any((g) => g.name == _selectedGenre))
+                        .where(
+                          (n) => n.genres.any((g) => g.name == _selectedGenre),
+                        )
                         .toList();
                   }
 
@@ -157,11 +173,18 @@ class _SearchPageState extends State<SearchPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.search_off, size: 64, color: AppTheme.muted.withOpacity(0.4)),
+                          Icon(
+                            Icons.search_off,
+                            size: 64,
+                            color: AppTheme.muted.withOpacity(0.4),
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             'No novels found',
-                            style: const TextStyle(color: AppTheme.muted, fontSize: 16),
+                            style: const TextStyle(
+                              color: AppTheme.muted,
+                              fontSize: 16,
+                            ),
                           ),
                         ],
                       ),
@@ -170,18 +193,23 @@ class _SearchPageState extends State<SearchPage> {
 
                   return GridView.builder(
                     padding: const EdgeInsets.all(16),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 0.52,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.52,
+                        ),
                     itemCount: displayNovels.length,
                     itemBuilder: (context, index) {
                       final novel = displayNovels[index];
                       return NovelCard(
                         novel: novel,
-                        onTap: () => Navigator.pushNamed(context, '/detail', arguments: novel.slug),
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          '/detail',
+                          arguments: novel.slug,
+                        ),
                       );
                     },
                   );
@@ -193,5 +221,4 @@ class _SearchPageState extends State<SearchPage> {
       ),
     );
   }
-
 }

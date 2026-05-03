@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:mobile/features/novels/domain/entities/novel.dart';
-import 'package:mobile/features/novels/domain/entities/chapter.dart';
-import 'package:mobile/features/novels/domain/repositories/novel_repository.dart';
+import 'package:nhive/features/novels/domain/entities/novel.dart';
+import 'package:nhive/features/novels/domain/entities/chapter.dart';
+import 'package:nhive/features/novels/domain/repositories/novel_repository.dart';
 
 class NovelProvider extends ChangeNotifier {
   final NovelRepository _repository;
@@ -36,7 +36,10 @@ class NovelProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _repository.getNovels(page: _currentPage, pageSize: 18);
+      final result = await _repository.getNovels(
+        page: _currentPage,
+        pageSize: 18,
+      );
       if (refresh) {
         _novels = result;
       } else {

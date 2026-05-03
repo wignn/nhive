@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/app/theme/app_theme.dart';
-import 'package:mobile/features/auth/presentation/bloc/auth_provider.dart';
+import 'package:nhive/app/theme/app_theme.dart';
+import 'package:nhive/features/auth/presentation/bloc/auth_provider.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -33,7 +33,11 @@ class ProfilePage extends StatelessWidget {
                   color: AppTheme.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(25),
                 ),
-                child: const Icon(Icons.person_outline, size: 50, color: AppTheme.primary),
+                child: const Icon(
+                  Icons.person_outline,
+                  size: 50,
+                  color: AppTheme.primary,
+                ),
               ),
               const SizedBox(height: 24),
               const Text(
@@ -44,7 +48,11 @@ class ProfilePage extends StatelessWidget {
               const Text(
                 'Sign in to save your reading progress,\nbookmark novels, and more.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.muted, fontSize: 14, height: 1.5),
+                style: TextStyle(
+                  color: AppTheme.muted,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 32),
               ElevatedButton(
@@ -57,9 +65,14 @@ class ProfilePage extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: AppTheme.primary),
                   minimumSize: const Size.fromHeight(50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                child: const Text('Create Account', style: TextStyle(color: AppTheme.primary)),
+                child: const Text(
+                  'Create Account',
+                  style: TextStyle(color: AppTheme.primary),
+                ),
               ),
             ],
           ),
@@ -94,7 +107,9 @@ class ProfilePage extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    user.username.isNotEmpty ? user.username[0].toUpperCase() : '?',
+                    user.username.isNotEmpty
+                        ? user.username[0].toUpperCase()
+                        : '?',
                     style: const TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.bold,
@@ -106,7 +121,10 @@ class ProfilePage extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 user.username,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -115,7 +133,10 @@ class ProfilePage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.primary.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20),
@@ -171,10 +192,16 @@ class ProfilePage extends StatelessWidget {
                         title: const Text('Logout'),
                         content: const Text('Are you sure you want to logout?'),
                         actions: [
-                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Cancel'),
+                          ),
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, true),
-                            child: const Text('Logout', style: TextStyle(color: AppTheme.primary)),
+                            child: const Text(
+                              'Logout',
+                              style: TextStyle(color: AppTheme.primary),
+                            ),
                           ),
                         ],
                       ),
@@ -184,11 +211,16 @@ class ProfilePage extends StatelessWidget {
                     }
                   },
                   icon: const Icon(Icons.logout, color: AppTheme.primary),
-                  label: const Text('Sign Out', style: TextStyle(color: AppTheme.primary)),
+                  label: const Text(
+                    'Sign Out',
+                    style: TextStyle(color: AppTheme.primary),
+                  ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppTheme.border),
                     minimumSize: const Size.fromHeight(50),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -223,8 +255,14 @@ class ProfilePage extends StatelessWidget {
           ),
           child: Icon(icon, color: AppTheme.primary, size: 20),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-        subtitle: Text(subtitle, style: const TextStyle(color: AppTheme.muted, fontSize: 12)),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(color: AppTheme.muted, fontSize: 12),
+        ),
         trailing: const Icon(Icons.chevron_right, color: AppTheme.muted),
       ),
     );

@@ -1,12 +1,10 @@
-import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:mobile/app/theme/app_theme.dart';
-import 'package:mobile/features/novels/presentation/bloc/novel_provider.dart';
-import 'package:mobile/features/library/presentation/bloc/library_provider.dart';
-import 'package:mobile/features/auth/presentation/bloc/auth_provider.dart';
+import 'package:nhive/app/theme/app_theme.dart';
+import 'package:nhive/features/novels/presentation/bloc/novel_provider.dart';
+import 'package:nhive/features/library/presentation/bloc/library_provider.dart';
+import 'package:nhive/features/auth/presentation/bloc/auth_provider.dart';
 
 class NovelDetailPage extends StatefulWidget {
   final String slug;
@@ -53,9 +51,16 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 48, color: AppTheme.muted),
+                  const Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: AppTheme.muted,
+                  ),
                   const SizedBox(height: 12),
-                  const Text('Failed to load novel', style: TextStyle(color: AppTheme.muted)),
+                  const Text(
+                    'Failed to load novel',
+                    style: TextStyle(color: AppTheme.muted),
+                  ),
                   const SizedBox(height: 12),
                   ElevatedButton(
                     onPressed: () => provider.loadNovelDetail(widget.slug),
@@ -86,16 +91,25 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                         CachedNetworkImage(
                           imageUrl: novel.coverUrl!,
                           fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(color: AppTheme.secondary),
+                          placeholder: (_, __) =>
+                              Container(color: AppTheme.secondary),
                           errorWidget: (_, __, ___) => Container(
                             color: AppTheme.secondary,
-                            child: const Icon(Icons.auto_stories, size: 64, color: AppTheme.muted),
+                            child: const Icon(
+                              Icons.auto_stories,
+                              size: 64,
+                              color: AppTheme.muted,
+                            ),
                           ),
                         )
                       else
                         Container(
                           color: AppTheme.secondary,
-                          child: const Icon(Icons.auto_stories, size: 64, color: AppTheme.muted),
+                          child: const Icon(
+                            Icons.auto_stories,
+                            size: 64,
+                            color: AppTheme.muted,
+                          ),
                         ),
                       // Gradient overlay
                       Container(
@@ -130,20 +144,34 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                           _buildStatusBadge(novel.status ?? 'Unknown'),
                           const SizedBox(width: 12),
                           if (novel.views > 0) ...[
-                            const Icon(Icons.remove_red_eye_outlined, size: 14, color: AppTheme.muted),
+                            const Icon(
+                              Icons.remove_red_eye_outlined,
+                              size: 14,
+                              color: AppTheme.muted,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               _formatViews(novel.views),
-                              style: const TextStyle(color: AppTheme.muted, fontSize: 12),
+                              style: const TextStyle(
+                                color: AppTheme.muted,
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                           if (chapters.isNotEmpty) ...[
                             const SizedBox(width: 12),
-                            const Icon(Icons.menu_book_outlined, size: 14, color: AppTheme.muted),
+                            const Icon(
+                              Icons.menu_book_outlined,
+                              size: 14,
+                              color: AppTheme.muted,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               '${chapters.length} chapters',
-                              style: const TextStyle(color: AppTheme.muted, fontSize: 12),
+                              style: const TextStyle(
+                                color: AppTheme.muted,
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ],
@@ -165,7 +193,11 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                       if (novel.author != null && novel.author!.isNotEmpty)
                         Row(
                           children: [
-                            const Icon(Icons.person_outline, size: 16, color: AppTheme.primary),
+                            const Icon(
+                              Icons.person_outline,
+                              size: 16,
+                              color: AppTheme.primary,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               novel.author!,
@@ -184,50 +216,80 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: novel.genres.map((g) => Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: AppTheme.secondary,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: AppTheme.border),
-                            ),
-                            child: Text(
-                              g.name,
-                              style: const TextStyle(fontSize: 12, color: AppTheme.foreground),
-                            ),
-                          )).toList(),
+                          children: novel.genres
+                              .map(
+                                (g) => Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.secondary,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: AppTheme.border),
+                                  ),
+                                  child: Text(
+                                    g.name,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppTheme.foreground,
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
                         ),
                       const SizedBox(height: 24),
 
                       // Synopsis
                       const Text(
                         'Synopsis',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       GestureDetector(
-                        onTap: () => setState(() => _synopsisExpanded = !_synopsisExpanded),
+                        onTap: () => setState(
+                          () => _synopsisExpanded = !_synopsisExpanded,
+                        ),
                         child: AnimatedCrossFade(
                           firstChild: Text(
                             novel.description ?? 'No description available.',
                             maxLines: 4,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: AppTheme.muted, fontSize: 14, height: 1.6),
+                            style: const TextStyle(
+                              color: AppTheme.muted,
+                              fontSize: 14,
+                              height: 1.6,
+                            ),
                           ),
                           secondChild: Text(
                             novel.description ?? 'No description available.',
-                            style: const TextStyle(color: AppTheme.muted, fontSize: 14, height: 1.6),
+                            style: const TextStyle(
+                              color: AppTheme.muted,
+                              fontSize: 14,
+                              height: 1.6,
+                            ),
                           ),
-                          crossFadeState: _synopsisExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                          crossFadeState: _synopsisExpanded
+                              ? CrossFadeState.showSecond
+                              : CrossFadeState.showFirst,
                           duration: const Duration(milliseconds: 300),
                         ),
                       ),
                       if ((novel.description?.length ?? 0) > 150)
                         TextButton(
-                          onPressed: () => setState(() => _synopsisExpanded = !_synopsisExpanded),
+                          onPressed: () => setState(
+                            () => _synopsisExpanded = !_synopsisExpanded,
+                          ),
                           child: Text(
                             _synopsisExpanded ? 'Show less' : 'Read more',
-                            style: const TextStyle(color: AppTheme.primary, fontSize: 13),
+                            style: const TextStyle(
+                              color: AppTheme.primary,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
 
@@ -240,7 +302,10 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                           children: [
                             Text(
                               'Chapters (${chapters.length})',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -256,59 +321,72 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final chapter = chapters[index];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surface,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppTheme.border),
-                          ),
-                          child: ListTile(
-                            onTap: () {
-                              Navigator.pushNamed(context, '/reader', arguments: {
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final chapter = chapters[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppTheme.border),
+                        ),
+                        child: ListTile(
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/reader',
+                              arguments: {
                                 'slug': novel.slug,
                                 'chapterNumber': chapter.number,
                                 'novelTitle': novel.title,
-                              });
-                            },
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                            leading: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: AppTheme.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '${chapter.number}',
-                                  style: const TextStyle(
-                                    color: AppTheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                              },
+                            );
+                          },
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          leading: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${chapter.number}',
+                                style: const TextStyle(
+                                  color: AppTheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
                                 ),
                               ),
                             ),
-                            title: Text(
-                              chapter.title,
-                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                            ),
-                            subtitle: chapter.wordCount > 0
-                                ? Text(
-                                    '${chapter.wordCount} words',
-                                    style: const TextStyle(color: AppTheme.muted, fontSize: 12),
-                                  )
-                                : null,
-                            trailing: const Icon(Icons.chevron_right, color: AppTheme.muted),
                           ),
-                        );
-                      },
-                      childCount: chapters.length,
-                    ),
+                          title: Text(
+                            chapter.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          subtitle: chapter.wordCount > 0
+                              ? Text(
+                                  '${chapter.wordCount} words',
+                                  style: const TextStyle(
+                                    color: AppTheme.muted,
+                                    fontSize: 12,
+                                  ),
+                                )
+                              : null,
+                          trailing: const Icon(
+                            Icons.chevron_right,
+                            color: AppTheme.muted,
+                          ),
+                        ),
+                      );
+                    }, childCount: chapters.length),
                   ),
                 )
               else if (!provider.isLoadingDetail)
@@ -318,9 +396,16 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                     child: Center(
                       child: Column(
                         children: [
-                          Icon(Icons.hourglass_empty, size: 40, color: AppTheme.muted),
+                          Icon(
+                            Icons.hourglass_empty,
+                            size: 40,
+                            color: AppTheme.muted,
+                          ),
                           SizedBox(height: 8),
-                          Text('No chapters yet', style: TextStyle(color: AppTheme.muted)),
+                          Text(
+                            'No chapters yet',
+                            style: TextStyle(color: AppTheme.muted),
+                          ),
                         ],
                       ),
                     ),
@@ -355,10 +440,13 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                             if (auth.status != AuthStatus.authenticated) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: const Text('Please login to bookmark'),
+                                  content: const Text(
+                                    'Please login to bookmark',
+                                  ),
                                   action: SnackBarAction(
                                     label: 'Login',
-                                    onPressed: () => Navigator.pushNamed(context, '/login'),
+                                    onPressed: () =>
+                                        Navigator.pushNamed(context, '/login'),
                                   ),
                                 ),
                               );
@@ -368,14 +456,22 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                           },
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(
-                              color: isBookmarked ? AppTheme.primary : AppTheme.border,
+                              color: isBookmarked
+                                  ? AppTheme.primary
+                                  : AppTheme.border,
                             ),
                             padding: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                           child: Icon(
-                            isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                            color: isBookmarked ? AppTheme.primary : AppTheme.muted,
+                            isBookmarked
+                                ? Icons.bookmark
+                                : Icons.bookmark_border,
+                            color: isBookmarked
+                                ? AppTheme.primary
+                                : AppTheme.muted,
                           ),
                         ),
                       );
@@ -387,11 +483,15 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                     child: ElevatedButton(
                       onPressed: chapters.isNotEmpty
                           ? () {
-                              Navigator.pushNamed(context, '/reader', arguments: {
-                                'slug': novel.slug,
-                                'chapterNumber': chapters.first.number,
-                                'novelTitle': novel.title,
-                              });
+                              Navigator.pushNamed(
+                                context,
+                                '/reader',
+                                arguments: {
+                                  'slug': novel.slug,
+                                  'chapterNumber': chapters.first.number,
+                                  'novelTitle': novel.title,
+                                },
+                              );
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
@@ -402,7 +502,11 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
                         children: [
                           const Icon(Icons.auto_stories, size: 20),
                           const SizedBox(width: 8),
-                          Text(chapters.isNotEmpty ? 'Read Now' : 'No Chapters Yet'),
+                          Text(
+                            chapters.isNotEmpty
+                                ? 'Read Now'
+                                : 'No Chapters Yet',
+                          ),
                         ],
                       ),
                     ),
@@ -441,7 +545,11 @@ class _NovelDetailPageState extends State<NovelDetailPage> {
       ),
       child: Text(
         status[0].toUpperCase() + status.substring(1),
-        style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 11),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 11,
+        ),
       ),
     );
   }

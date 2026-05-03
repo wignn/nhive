@@ -1,9 +1,9 @@
-import 'package:mobile/features/novels/domain/repositories/novel_repository.dart';
-import 'package:mobile/features/novels/data/datasources/novel_remote_datasource.dart';
-import 'package:mobile/features/novels/domain/entities/novel.dart';
-import 'package:mobile/features/novels/domain/entities/chapter.dart';
-import 'package:mobile/features/novels/data/models/novel_model.dart';
-import 'package:mobile/features/novels/data/models/chapter_model.dart';
+import 'package:nhive/features/novels/domain/repositories/novel_repository.dart';
+import 'package:nhive/features/novels/data/datasources/novel_remote_datasource.dart';
+import 'package:nhive/features/novels/domain/entities/novel.dart';
+import 'package:nhive/features/novels/domain/entities/chapter.dart';
+import 'package:nhive/features/novels/data/models/novel_model.dart';
+import 'package:nhive/features/novels/data/models/chapter_model.dart';
 
 class NovelRepositoryImpl implements NovelRepository {
   final NovelRemoteDataSource remoteDataSource;
@@ -11,11 +11,21 @@ class NovelRepositoryImpl implements NovelRepository {
   NovelRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<List<Novel>> getNovels({int page = 1, int pageSize = 18, String sort = 'updated'}) async {
-    final data = await remoteDataSource.getNovels(page: page, pageSize: pageSize, sort: sort);
+  Future<List<Novel>> getNovels({
+    int page = 1,
+    int pageSize = 18,
+    String sort = 'updated',
+  }) async {
+    final data = await remoteDataSource.getNovels(
+      page: page,
+      pageSize: pageSize,
+      sort: sort,
+    );
     final coverBaseUrl = data['cover_base_url'] as String?;
     final novels = data['novels'] as List? ?? [];
-    return novels.map((j) => NovelModel.fromJson(j, coverBaseUrl: coverBaseUrl)).toList();
+    return novels
+        .map((j) => NovelModel.fromJson(j, coverBaseUrl: coverBaseUrl))
+        .toList();
   }
 
   @override
@@ -45,6 +55,8 @@ class NovelRepositoryImpl implements NovelRepository {
     final data = await remoteDataSource.searchNovels(query);
     final coverBaseUrl = data['cover_base_url'] as String?;
     final novels = data['novels'] as List? ?? [];
-    return novels.map((j) => NovelModel.fromJson(j, coverBaseUrl: coverBaseUrl)).toList();
+    return novels
+        .map((j) => NovelModel.fromJson(j, coverBaseUrl: coverBaseUrl))
+        .toList();
   }
 }

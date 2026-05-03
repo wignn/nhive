@@ -42,6 +42,7 @@ func main() {
 		zap.String("novel_service", cfg.NovelServiceAddr),
 		zap.String("comment_service", cfg.CommentServiceAddr),
 		zap.String("library_service", cfg.LibraryServiceAddr),
+		zap.String("notification_service", cfg.NotificationServiceAddr),
 	)
 
 	svcClients := clients.New(
@@ -49,6 +50,7 @@ func main() {
 		cfg.NovelServiceAddr,
 		cfg.CommentServiceAddr,
 		cfg.LibraryServiceAddr,
+		cfg.NotificationServiceAddr,
 		cfg.InternalAPIKey,
 	)
 	defer svcClients.Close()
@@ -114,6 +116,10 @@ func main() {
 
 			r.Get("/progress/{novelId}", h.GetProgress)
 			r.Put("/progress/{novelId}", h.SaveProgress)
+
+			r.Get("/notifications", h.GetNotifications)
+			r.Patch("/notifications/{id}/read", h.MarkNotificationRead)
+			r.Post("/notifications/fcm-token", h.RegisterFCMToken)
 		})
 
 		// Admin routes

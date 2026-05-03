@@ -3,5 +3,9 @@ class PaginationModel<T> {
   final int total;
   final int page;
 
-  PaginationModel({required this.items, required this.total, required this.page});
+  PaginationModel({
+    required this.items,
+    required this.total,
+    required this.page,
+  });
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/app/theme/app_theme.dart';
-import 'package:mobile/features/auth/presentation/bloc/auth_provider.dart';
+import 'package:nhive/app/theme/app_theme.dart';
+import 'package:nhive/features/auth/presentation/bloc/auth_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -40,10 +40,7 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.of(context).pop();
     } else if (mounted && auth.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(auth.error!),
-          backgroundColor: Colors.redAccent,
-        ),
+        SnackBar(content: Text(auth.error!), backgroundColor: Colors.redAccent),
       );
     }
   }
@@ -64,7 +61,11 @@ class _LoginPageState extends State<LoginPage> {
                 shape: BoxShape.circle,
                 color: AppTheme.primary.withOpacity(0.15),
                 boxShadow: [
-                  BoxShadow(color: AppTheme.primary.withOpacity(0.2), blurRadius: 100, spreadRadius: 50),
+                  BoxShadow(
+                    color: AppTheme.primary.withOpacity(0.2),
+                    blurRadius: 100,
+                    spreadRadius: 50,
+                  ),
                 ],
               ),
             ),
@@ -79,7 +80,11 @@ class _LoginPageState extends State<LoginPage> {
                 shape: BoxShape.circle,
                 color: AppTheme.primary.withOpacity(0.1),
                 boxShadow: [
-                  BoxShadow(color: AppTheme.primary.withOpacity(0.15), blurRadius: 80, spreadRadius: 40),
+                  BoxShadow(
+                    color: AppTheme.primary.withOpacity(0.15),
+                    blurRadius: 80,
+                    spreadRadius: 40,
+                  ),
                 ],
               ),
             ),
@@ -88,7 +93,10 @@ class _LoginPageState extends State<LoginPage> {
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 16.0,
+                ),
                 child: Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
@@ -109,7 +117,8 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       Center(
                         child: ShaderMask(
-                          shaderCallback: (bounds) => AppTheme.brandGradient.createShader(bounds),
+                          shaderCallback: (bounds) =>
+                              AppTheme.brandGradient.createShader(bounds),
                           child: Text(
                             'NovelHive',
                             style: Theme.of(context).textTheme.displayMedium,
@@ -120,9 +129,8 @@ class _LoginPageState extends State<LoginPage> {
                       Text(
                         'Welcome back, reader.',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppTheme.muted,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(color: AppTheme.muted),
                       ),
                       const SizedBox(height: 48),
                       TextField(
@@ -131,7 +139,10 @@ class _LoginPageState extends State<LoginPage> {
                         textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
                           hintText: 'Email',
-                          prefixIcon: Icon(Icons.email_outlined, color: AppTheme.muted),
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            color: AppTheme.muted,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -142,11 +153,18 @@ class _LoginPageState extends State<LoginPage> {
                         onSubmitted: (_) => _handleLogin(),
                         decoration: InputDecoration(
                           hintText: 'Password',
-                          prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.muted),
+                          prefixIcon: const Icon(
+                            Icons.lock_outline,
+                            color: AppTheme.muted,
+                          ),
                           suffixIcon: IconButton(
-                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
                             icon: Icon(
-                              _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              _obscurePassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
                               color: AppTheme.muted,
                             ),
                           ),
@@ -171,16 +189,26 @@ class _LoginPageState extends State<LoginPage> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.transparent,
                                 shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
-                              onPressed: auth.status == AuthStatus.loading ? null : _handleLogin,
+                              onPressed: auth.status == AuthStatus.loading
+                                  ? null
+                                  : _handleLogin,
                               child: auth.status == AuthStatus.loading
                                   ? const SizedBox(
                                       height: 22,
                                       width: 22,
-                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
                                     )
-                                  : const Text('Sign In', style: TextStyle(fontSize: 16)),
+                                  : const Text(
+                                      'Sign In',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
                             ),
                           );
                         },
@@ -189,12 +217,24 @@ class _LoginPageState extends State<LoginPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text("Don't have an account?", style: TextStyle(color: AppTheme.muted)),
+                          const Text(
+                            "Don't have an account?",
+                            style: TextStyle(color: AppTheme.muted),
+                          ),
                           TextButton(
                             onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/register');
+                              Navigator.pushReplacementNamed(
+                                context,
+                                '/register',
+                              );
                             },
-                            child: const Text('Register', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
+                            child: const Text(
+                              'Register',
+                              style: TextStyle(
+                                color: AppTheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -209,7 +249,10 @@ class _LoginPageState extends State<LoginPage> {
             left: 8,
             child: IconButton(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back_ios_new, color: AppTheme.foreground),
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                color: AppTheme.foreground,
+              ),
             ),
           ),
         ],

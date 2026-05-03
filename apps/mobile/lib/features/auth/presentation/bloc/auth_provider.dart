@@ -1,16 +1,24 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:mobile/features/auth/domain/entities/user.dart';
-import 'package:mobile/features/auth/data/repositories/auth_repository_impl.dart';
-import 'package:mobile/core/storage/secure_storage.dart';
+import 'package:nhive/features/auth/domain/entities/user.dart';
+import 'package:nhive/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:nhive/core/storage/secure_storage.dart';
+import 'package:nhive/features/library/presentation/bloc/library_provider.dart';
 
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepositoryImpl _repository;
   final SecureStorage _storage;
+  LibraryProvider? _libraryProvider;
 
   AuthProvider(this._repository, this._storage);
+
+  void updateLibraryProvider(LibraryProvider libraryProvider) {
+    _libraryProvider = libraryProvider;
+    if (_status == AuthStatus.authenticated) {
+      _libraryProvider?.loadLibrary();
+    }
+  }
 
   AuthStatus _status = AuthStatus.initial;
   AuthStatus get status => _status;
@@ -27,6 +35,7 @@ class AuthProvider extends ChangeNotifier {
       try {
         _user = await _repository.getMe();
         _status = AuthStatus.authenticated;
+        _libraryProvider?.loadLibrary();
       } catch (e) {
         _status = AuthStatus.unauthenticated;
       }
@@ -44,6 +53,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       _user = await _repository.login(email, password);
       _status = AuthStatus.authenticated;
+      _libraryProvider?.loadLibrary();
       notifyListeners();
       return true;
     } catch (e) {
@@ -75,6 +85,7 @@ class AuthProvider extends ChangeNotifier {
     await _storage.clearAll();
     _user = null;
     _status = AuthStatus.unauthenticated;
+    _libraryProvider?.loadLibrary(); // Will clear bookmarks as it's unauthenticated
     notifyListeners();
   }
 

@@ -204,6 +204,30 @@ services:
       APP_ENV: production
       LOG_LEVEL: info
 
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    container_name: notification-service
+    image: wign/nhive-notification-service
+    restart: unless-stopped
+    networks:
+      - novelhive-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      library-service:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgres://novelhive:${POSTGRES_PASSWORD}@postgres:5432/novelhive_notifications?sslmode=disable
+      NATS_URL: nats://nats:4222
+      LIBRARY_SERVICE_ADDR: library-service:50056
+      FIREBASE_CREDENTIALS: /app/services/notification-service/nhive-71b46-firebase-adminsdk-fbsvc-4ae7717497.json
+      APP_ENV: production
+      LOG_LEVEL: info
+
   gateway:
     build:
       context: .

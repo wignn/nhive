@@ -1,12 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/app/app.dart';
+import 'package:nhive/core/di/service_locator.dart';
+import 'package:nhive/features/auth/presentation/pages/login_page.dart';
 
 void main() {
   testWidgets('App initialization test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    TestWidgetsFlutterBinding.ensureInitialized();
+    sl.init();
 
-    // Verify that the app title is present.
-    expect(find.text('NovelHive'), findsWidgets);
+
+
+    expect(find.byType(LoginPage), findsOneWidget);
   });
 }

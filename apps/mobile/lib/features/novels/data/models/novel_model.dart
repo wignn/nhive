@@ -1,4 +1,3 @@
-import 'package:mobile/core/constants/api_constants.dart';
 import '../../domain/entities/novel.dart';
 
 class NovelModel extends Novel {
@@ -17,8 +16,10 @@ class NovelModel extends Novel {
     super.createdAt,
   });
 
-  factory NovelModel.fromJson(Map<String, dynamic> json, {String? coverBaseUrl}) {
-
+  factory NovelModel.fromJson(
+    Map<String, dynamic> json, {
+    String? coverBaseUrl,
+  }) {
     final genresRaw = json['genres'];
     final genres = <Genre>[];
     if (genresRaw != null && genresRaw is List) {
@@ -32,8 +33,12 @@ class NovelModel extends Novel {
     }
 
     String? coverUrl = json['cover_url'];
-    if (coverUrl != null && coverBaseUrl != null && !coverUrl.startsWith('http')) {
-      final base = coverBaseUrl.endsWith('/') ? coverBaseUrl.substring(0, coverBaseUrl.length - 1) : coverBaseUrl;
+    if (coverUrl != null &&
+        coverBaseUrl != null &&
+        !coverUrl.startsWith('http')) {
+      final base = coverBaseUrl.endsWith('/')
+          ? coverBaseUrl.substring(0, coverBaseUrl.length - 1)
+          : coverBaseUrl;
       final path = coverUrl.startsWith('/') ? coverUrl : '/$coverUrl';
       coverUrl = '$base$path';
     }

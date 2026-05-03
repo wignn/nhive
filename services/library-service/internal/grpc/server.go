@@ -256,6 +256,19 @@ func (s *LibraryServiceServer) SaveProgress(ctx context.Context, req *libraryv1.
 	}, nil
 }
 
+func (s *LibraryServiceServer) GetUsersByNovel(ctx context.Context, req *libraryv1.GetUsersByNovelRequest) (*libraryv1.GetUsersByNovelResponse, error) {
+	userIDs, err := s.libraryRepo.GetUsersByNovel(req.NovelId)
+	if err != nil {
+		s.logger.Error("failed to get users by novel",
+			zap.String("novel_id", req.NovelId),
+			zap.Error(err),
+		)
+		return nil, status.Error(codes.Internal, "failed to get users by novel")
+	}
+
+	return &libraryv1.GetUsersByNovelResponse{UserIds: userIDs}, nil
+}
+
 func genID() string {
 	b := make([]byte, 16)
 	rand.Read(b)

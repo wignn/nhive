@@ -6,7 +6,7 @@ class GetChapterUseCase {
 
   GetChapterUseCase(this.repository);
 
-  Future<Chapter> execute(String id) async {
-    return await repository.getChapter(id);
+  Future<Chapter> execute(String slug, int number) async {
+    return repository.getChapterDetail(slug, number);
   }
 }

@@ -1,8 +1,8 @@
-import 'package:mobile/core/storage/secure_storage.dart';
-import 'package:mobile/features/auth/domain/entities/user.dart';
-import 'package:mobile/features/auth/domain/repositories/auth_repository.dart';
-import 'package:mobile/features/auth/data/datasources/auth_remote_datasource.dart';
-import 'package:mobile/features/auth/data/models/user_model.dart';
+import 'package:nhive/core/storage/secure_storage.dart';
+import 'package:nhive/features/auth/domain/entities/user.dart';
+import 'package:nhive/features/auth/domain/repositories/auth_repository.dart';
+import 'package:nhive/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:nhive/features/auth/data/models/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -15,7 +15,7 @@ class AuthRepositoryImpl implements AuthRepository {
     final data = await remoteDataSource.login(email, password);
     final accessToken = data['access_token'];
     final refreshToken = data['refresh_token'];
-    
+
     if (accessToken != null) {
       await secureStorage.saveToken(accessToken);
     }

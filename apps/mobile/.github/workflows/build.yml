@@ -1,0 +1,256 @@
+name: Flutter Build & Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type (patch/minor/major)'
+        required: false
+        default: 'patch'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  version:
+    name: Extract Version
+    runs-on: ubuntu-latest
+    outputs:
+      app_version: ${{ steps.extract.outputs.version }}
+      build_number: ${{ steps.extract.outputs.build_number }}
+      full_version: ${{ steps.extract.outputs.full_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version from pubspec.yaml
+        id: extract
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | tr -d ' ')
+          APP_VERSION=$(echo "$VERSION" | cut -d'+' -f1)
+          BUILD_NUMBER=$(echo "$VERSION" | cut -d'+' -f2)
+
+          echo "version=$APP_VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "full_version=$VERSION" >> $GITHUB_OUTPUT
+
+          echo "App Version : $APP_VERSION"
+          echo "Build Number: $BUILD_NUMBER"
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+        continue-on-error: true
+
+      - name: Analyze code
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Run unit & widget tests
+        if: false
+        run: flutter test --coverage
+
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    needs: [version, test]
+    outputs:
+      artifact_name: ${{ steps.meta.outputs.artifact_name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java (required for Android build)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            android/.gradle
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/gradle/wrapper/gradle-wrapper.properties', 'android/app/build.gradle') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Setup Firebase (google-services.json)
+        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > android/app/google-services.json
+
+      - name: Decode & setup keystore
+        if: github.event_name != 'pull_request'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.jks
+
+      - name: Create key.properties
+        if: github.event_name != 'pull_request'
+        run: |
+          cat > android/key.properties <<EOF
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          storeFile=release.jks
+          EOF
+
+      - name: Set artifact metadata
+        id: meta
+        run: |
+          ARTIFACT="nhive-v${{ needs.version.outputs.app_version }}.apk"
+          echo "artifact_name=$ARTIFACT" >> $GITHUB_OUTPUT
+
+      - name: Build release APK
+        if: github.event_name != 'pull_request'
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          INTERNAL_KEY: ${{ secrets.INTERNAL_KEY }}
+          API_KEY: ${{ secrets.API_KEY }}
+        run: |
+          flutter build apk \
+            --release \
+            --obfuscate \
+            --split-debug-info=build/debug-info \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=INTERNAL_KEY="$INTERNAL_KEY" \
+            --dart-define=API_KEY="$API_KEY"
+
+      - name: Build debug APK (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          flutter build apk \
+            --debug \
+            --dart-define=API_BASE_URL="https://staging.example.com" \
+            --dart-define=INTERNAL_KEY="dev-key" \
+            --dart-define=API_KEY="dev-api-key"
+
+      - name: Rename APK
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            mv build/app/outputs/flutter-apk/app-debug.apk \
+               build/app/outputs/flutter-apk/${{ steps.meta.outputs.artifact_name }}
+          else
+            mv build/app/outputs/flutter-apk/app-release.apk \
+               build/app/outputs/flutter-apk/${{ steps.meta.outputs.artifact_name }}
+          fi
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.artifact_name }}
+          path: build/app/outputs/flutter-apk/${{ steps.meta.outputs.artifact_name }}
+          retention-days: 30
+
+      - name: Upload debug symbols
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-symbols-v${{ needs.version.outputs.app_version }}
+          path: build/debug-info/
+          retention-days: 90
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [version, build]
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact_name }}
+          path: dist/
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git tag --sort=-version:refname | head -n 1 || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            LOG=$(git log --pretty=format:"- %s (%h)" | head -20)
+          else
+            LOG=$(git log "$PREV_TAG"..HEAD --pretty=format:"- %s (%h)")
+          fi
+
+          echo "## What's Changed" > changelog.md
+          echo "" >> changelog.md
+          echo "$LOG" >> changelog.md
+          echo "" >> changelog.md
+          echo "**Full version:** \`${{ needs.version.outputs.full_version }}\`" >> changelog.md
+
+          cat changelog.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.version.outputs.app_version }}
+          name: v${{ needs.version.outputs.app_version }}
+          body_path: changelog.md
+          draft: false
+          prerelease: false
+          files: dist/${{ needs.build.outputs.artifact_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

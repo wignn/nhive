@@ -14,6 +14,7 @@ service LibraryService {
   rpc RemoveBookmark(RemoveBookmarkRequest) returns (RemoveResponse);
   rpc GetProgress(GetProgressRequest) returns (ReadingProgress);
   rpc SaveProgress(SaveProgressRequest) returns (ReadingProgress);
+  rpc GetUsersByNovel(GetUsersByNovelRequest) returns (GetUsersByNovelResponse);
 }
 
 message LibraryEntry {
@@ -22,6 +23,14 @@ message LibraryEntry {
   string novel_id = 3;
   string status = 4;
   string created_at = 5;
+}
+
+message GetUsersByNovelRequest {
+  string novel_id = 1;
+}
+
+message GetUsersByNovelResponse {
+  repeated string user_ids = 1;
 }
 
 message GetLibraryRequest {

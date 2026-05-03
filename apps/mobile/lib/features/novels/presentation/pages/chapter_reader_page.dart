@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/app/theme/app_theme.dart';
-import 'package:mobile/features/novels/presentation/bloc/novel_provider.dart';
+import 'package:nhive/app/theme/app_theme.dart';
+import 'package:nhive/features/novels/presentation/bloc/novel_provider.dart';
 
 class ChapterReaderPage extends StatefulWidget {
   final String slug;
@@ -35,7 +35,10 @@ class _ChapterReaderPageState extends State<ChapterReaderPage> {
   }
 
   void _loadChapter() {
-    context.read<NovelProvider>().loadChapter(widget.slug, _currentChapterNumber);
+    context.read<NovelProvider>().loadChapter(
+      widget.slug,
+      _currentChapterNumber,
+    );
   }
 
   void _goToChapter(int number) {
@@ -69,7 +72,8 @@ class _ChapterReaderPageState extends State<ChapterReaderPage> {
         final error = provider.chapterError;
 
         final hasPrev = _currentChapterNumber > 1;
-        final hasNext = chapters.isNotEmpty && _currentChapterNumber < chapters.length;
+        final hasNext =
+            chapters.isNotEmpty && _currentChapterNumber < chapters.length;
 
         return Scaffold(
           backgroundColor: bg,
@@ -81,8 +85,14 @@ class _ChapterReaderPageState extends State<ChapterReaderPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  chapter != null ? 'Chapter $_currentChapterNumber' : 'Loading...',
-                  style: TextStyle(fontSize: 15, color: fg, fontWeight: FontWeight.w600),
+                  chapter != null
+                      ? 'Chapter $_currentChapterNumber'
+                      : 'Loading...',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: fg,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 Text(
                   widget.novelTitle,
@@ -102,103 +112,145 @@ class _ChapterReaderPageState extends State<ChapterReaderPage> {
                   child: CircularProgressIndicator(color: AppTheme.primary),
                 )
               : error != null
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.error_outline, size: 48, color: fg.withOpacity(0.4)),
-                          const SizedBox(height: 12),
-                          Text('Failed to load chapter', style: TextStyle(color: fg.withOpacity(0.5))),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: _loadChapter,
-                            child: const Text('Retry'),
-                          ),
-                        ],
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: fg.withOpacity(0.4),
                       ),
-                    )
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 12),
-                          // Chapter title
-                          Text(
-                            chapter?.title ?? '',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.sora(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: fg,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          if (chapter != null && chapter.wordCount > 0)
-                            Text(
-                              '${chapter.wordCount} words',
-                              style: TextStyle(color: fg.withOpacity(0.4), fontSize: 12),
-                            ),
-                          const SizedBox(height: 32),
-                          // Chapter content
-                          Text(
-                            chapter?.content ?? 'No content available.',
-                            style: GoogleFonts.sourceSerif4(
-                              fontSize: _fontSize,
-                              height: 1.85,
-                              color: fg,
-                            ),
-                          ),
-                          const SizedBox(height: 48),
-                          // Navigation
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: (fg == AppTheme.foreground
-                                  ? AppTheme.surface
-                                  : fg.withOpacity(0.05)),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                TextButton.icon(
-                                  onPressed: hasPrev ? () => _goToChapter(_currentChapterNumber - 1) : null,
-                                  icon: Icon(Icons.arrow_back_ios, size: 16, color: hasPrev ? AppTheme.primary : fg.withOpacity(0.2)),
-                                  label: Text(
-                                    'Previous',
-                                    style: TextStyle(color: hasPrev ? AppTheme.primary : fg.withOpacity(0.2)),
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.primary.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    '$_currentChapterNumber / ${chapters.length}',
-                                    style: const TextStyle(
-                                      color: AppTheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ),
-                                TextButton.icon(
-                                  onPressed: hasNext ? () => _goToChapter(_currentChapterNumber + 1) : null,
-                                  icon: Text(
-                                    'Next',
-                                    style: TextStyle(color: hasNext ? AppTheme.primary : fg.withOpacity(0.2)),
-                                  ),
-                                  label: Icon(Icons.arrow_forward_ios, size: 16, color: hasNext ? AppTheme.primary : fg.withOpacity(0.2)),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 40),
-                        ],
+                      const SizedBox(height: 12),
+                      Text(
+                        'Failed to load chapter',
+                        style: TextStyle(color: fg.withOpacity(0.5)),
                       ),
-                    ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: _loadChapter,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 12),
+                      // Chapter title
+                      Text(
+                        chapter?.title ?? '',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.sora(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: fg,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (chapter != null && chapter.wordCount > 0)
+                        Text(
+                          '${chapter.wordCount} words',
+                          style: TextStyle(
+                            color: fg.withOpacity(0.4),
+                            fontSize: 12,
+                          ),
+                        ),
+                      const SizedBox(height: 32),
+                      // Chapter content
+                      Text(
+                        chapter?.content ?? 'No content available.',
+                        style: GoogleFonts.sourceSerif4(
+                          fontSize: _fontSize,
+                          height: 1.85,
+                          color: fg,
+                        ),
+                      ),
+                      const SizedBox(height: 48),
+                      // Navigation
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: (fg == AppTheme.foreground
+                              ? AppTheme.surface
+                              : fg.withOpacity(0.05)),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            TextButton.icon(
+                              onPressed: hasPrev
+                                  ? () =>
+                                        _goToChapter(_currentChapterNumber - 1)
+                                  : null,
+                              icon: Icon(
+                                Icons.arrow_back_ios,
+                                size: 16,
+                                color: hasPrev
+                                    ? AppTheme.primary
+                                    : fg.withOpacity(0.2),
+                              ),
+                              label: Text(
+                                'Previous',
+                                style: TextStyle(
+                                  color: hasPrev
+                                      ? AppTheme.primary
+                                      : fg.withOpacity(0.2),
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primary.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                '$_currentChapterNumber / ${chapters.length}',
+                                style: const TextStyle(
+                                  color: AppTheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: hasNext
+                                  ? () =>
+                                        _goToChapter(_currentChapterNumber + 1)
+                                  : null,
+                              icon: Text(
+                                'Next',
+                                style: TextStyle(
+                                  color: hasNext
+                                      ? AppTheme.primary
+                                      : fg.withOpacity(0.2),
+                                ),
+                              ),
+                              label: Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: hasNext
+                                    ? AppTheme.primary
+                                    : fg.withOpacity(0.2),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
         );
       },
     );
@@ -231,20 +283,44 @@ class _ChapterReaderPageState extends State<ChapterReaderPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text('Reader Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Reader Settings',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 24),
-                  const Text('Theme', style: TextStyle(color: AppTheme.muted, fontSize: 13)),
+                  const Text(
+                    'Theme',
+                    style: TextStyle(color: AppTheme.muted, fontSize: 13),
+                  ),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _themeButton(setModalState, 'dark', const Color(0xFF0F111A), 'Dark'),
-                      _themeButton(setModalState, 'sepia', const Color(0xFFF4ECD8), 'Sepia'),
-                      _themeButton(setModalState, 'light', Colors.white, 'Light'),
+                      _themeButton(
+                        setModalState,
+                        'dark',
+                        const Color(0xFF0F111A),
+                        'Dark',
+                      ),
+                      _themeButton(
+                        setModalState,
+                        'sepia',
+                        const Color(0xFFF4ECD8),
+                        'Sepia',
+                      ),
+                      _themeButton(
+                        setModalState,
+                        'light',
+                        Colors.white,
+                        'Light',
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  const Text('Font Size', style: TextStyle(color: AppTheme.muted, fontSize: 13)),
+                  const Text(
+                    'Font Size',
+                    style: TextStyle(color: AppTheme.muted, fontSize: 13),
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -262,9 +338,18 @@ class _ChapterReaderPageState extends State<ChapterReaderPage> {
                           },
                         ),
                       ),
-                      Text('A', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                      Text(
+                        'A',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(width: 8),
-                      Text('${_fontSize.toInt()}', style: const TextStyle(color: AppTheme.muted)),
+                      Text(
+                        '${_fontSize.toInt()}',
+                        style: const TextStyle(color: AppTheme.muted),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -277,7 +362,12 @@ class _ChapterReaderPageState extends State<ChapterReaderPage> {
     );
   }
 
-  Widget _themeButton(StateSetter setModalState, String t, Color color, String label) {
+  Widget _themeButton(
+    StateSetter setModalState,
+    String t,
+    Color color,
+    String label,
+  ) {
     bool isSelected = _theme == t;
     return GestureDetector(
       onTap: () {
@@ -298,17 +388,27 @@ class _ChapterReaderPageState extends State<ChapterReaderPage> {
                 width: isSelected ? 3 : 1,
               ),
               boxShadow: isSelected
-                  ? [BoxShadow(color: AppTheme.primary.withOpacity(0.3), blurRadius: 8)]
+                  ? [
+                      BoxShadow(
+                        color: AppTheme.primary.withOpacity(0.3),
+                        blurRadius: 8,
+                      ),
+                    ]
                   : [],
             ),
-            child: isSelected ? const Icon(Icons.check, color: AppTheme.primary) : null,
+            child: isSelected
+                ? const Icon(Icons.check, color: AppTheme.primary)
+                : null,
           ),
           const SizedBox(height: 6),
-          Text(label, style: TextStyle(
-            fontSize: 12,
-            color: isSelected ? AppTheme.primary : AppTheme.muted,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          )),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: isSelected ? AppTheme.primary : AppTheme.muted,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
         ],
       ),
     );

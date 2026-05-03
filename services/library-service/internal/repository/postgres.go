@@ -56,6 +56,24 @@ func (r *PostgresLibraryRepo) RemoveFromLibrary(userID, novelID string) error {
 	return err
 }
 
+func (r *PostgresLibraryRepo) GetUsersByNovel(novelID string) ([]string, error) {
+	rows, err := r.pool.Query(context.Background(), "SELECT user_id FROM reading_lists WHERE novel_id=$1", novelID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var userIDs []string
+	for rows.Next() {
+		var userID string
+		if err := rows.Scan(&userID); err != nil {
+			return nil, err
+		}
+		userIDs = append(userIDs, userID)
+	}
+	return userIDs, nil
+}
+
 type PostgresBookmarkRepo struct{ pool *pgxpool.Pool }
 func NewPostgresBookmarkRepo(pool *pgxpool.Pool) *PostgresBookmarkRepo { return &PostgresBookmarkRepo{pool: pool} }
 

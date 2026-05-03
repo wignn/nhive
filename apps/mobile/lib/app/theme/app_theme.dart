@@ -30,22 +30,50 @@ class AppTheme {
         onPrimary: Colors.white,
         onSurface: foreground,
       ),
-      textTheme: GoogleFonts.interTextTheme(
-        const TextTheme(
-          displayLarge: TextStyle(fontWeight: FontWeight.bold, color: foreground),
-          displayMedium: TextStyle(fontWeight: FontWeight.bold, color: foreground),
-          displaySmall: TextStyle(fontWeight: FontWeight.bold, color: foreground),
-          headlineMedium: TextStyle(fontWeight: FontWeight.bold, color: foreground),
-          titleLarge: TextStyle(fontWeight: FontWeight.w600, color: foreground),
-          bodyLarge: TextStyle(color: foreground),
-          bodyMedium: TextStyle(color: foreground),
-        ),
-      ).copyWith(
-        displayLarge: GoogleFonts.sora(fontWeight: FontWeight.bold, color: foreground),
-        displayMedium: GoogleFonts.sora(fontWeight: FontWeight.bold, color: foreground),
-        displaySmall: GoogleFonts.sora(fontWeight: FontWeight.bold, color: foreground),
-        headlineMedium: GoogleFonts.sora(fontWeight: FontWeight.bold, color: foreground),
-      ),
+      textTheme:
+          GoogleFonts.interTextTheme(
+            const TextTheme(
+              displayLarge: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: foreground,
+              ),
+              displayMedium: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: foreground,
+              ),
+              displaySmall: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: foreground,
+              ),
+              headlineMedium: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: foreground,
+              ),
+              titleLarge: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: foreground,
+              ),
+              bodyLarge: TextStyle(color: foreground),
+              bodyMedium: TextStyle(color: foreground),
+            ),
+          ).copyWith(
+            displayLarge: GoogleFonts.sora(
+              fontWeight: FontWeight.bold,
+              color: foreground,
+            ),
+            displayMedium: GoogleFonts.sora(
+              fontWeight: FontWeight.bold,
+              color: foreground,
+            ),
+            displaySmall: GoogleFonts.sora(
+              fontWeight: FontWeight.bold,
+              color: foreground,
+            ),
+            headlineMedium: GoogleFonts.sora(
+              fontWeight: FontWeight.bold,
+              color: foreground,
+            ),
+          ),
       cardTheme: CardThemeData(
         color: surface,
         elevation: 0,

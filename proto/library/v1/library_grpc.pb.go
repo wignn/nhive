@@ -28,6 +28,7 @@ const (
 	LibraryService_RemoveBookmark_FullMethodName    = "/library.v1.LibraryService/RemoveBookmark"
 	LibraryService_GetProgress_FullMethodName       = "/library.v1.LibraryService/GetProgress"
 	LibraryService_SaveProgress_FullMethodName      = "/library.v1.LibraryService/SaveProgress"
+	LibraryService_GetUsersByNovel_FullMethodName   = "/library.v1.LibraryService/GetUsersByNovel"
 )
 
 // LibraryServiceClient is the client API for LibraryService service.
@@ -43,6 +44,7 @@ type LibraryServiceClient interface {
 	RemoveBookmark(ctx context.Context, in *RemoveBookmarkRequest, opts ...grpc.CallOption) (*RemoveResponse, error)
 	GetProgress(ctx context.Context, in *GetProgressRequest, opts ...grpc.CallOption) (*ReadingProgress, error)
 	SaveProgress(ctx context.Context, in *SaveProgressRequest, opts ...grpc.CallOption) (*ReadingProgress, error)
+	GetUsersByNovel(ctx context.Context, in *GetUsersByNovelRequest, opts ...grpc.CallOption) (*GetUsersByNovelResponse, error)
 }
 
 type libraryServiceClient struct {
@@ -143,6 +145,16 @@ func (c *libraryServiceClient) SaveProgress(ctx context.Context, in *SaveProgres
 	return out, nil
 }
 
+func (c *libraryServiceClient) GetUsersByNovel(ctx context.Context, in *GetUsersByNovelRequest, opts ...grpc.CallOption) (*GetUsersByNovelResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUsersByNovelResponse)
+	err := c.cc.Invoke(ctx, LibraryService_GetUsersByNovel_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LibraryServiceServer is the server API for LibraryService service.
 // All implementations must embed UnimplementedLibraryServiceServer
 // for forward compatibility.
@@ -156,6 +168,7 @@ type LibraryServiceServer interface {
 	RemoveBookmark(context.Context, *RemoveBookmarkRequest) (*RemoveResponse, error)
 	GetProgress(context.Context, *GetProgressRequest) (*ReadingProgress, error)
 	SaveProgress(context.Context, *SaveProgressRequest) (*ReadingProgress, error)
+	GetUsersByNovel(context.Context, *GetUsersByNovelRequest) (*GetUsersByNovelResponse, error)
 	mustEmbedUnimplementedLibraryServiceServer()
 }
 
@@ -192,6 +205,9 @@ func (UnimplementedLibraryServiceServer) GetProgress(context.Context, *GetProgre
 }
 func (UnimplementedLibraryServiceServer) SaveProgress(context.Context, *SaveProgressRequest) (*ReadingProgress, error) {
 	return nil, status.Error(codes.Unimplemented, "method SaveProgress not implemented")
+}
+func (UnimplementedLibraryServiceServer) GetUsersByNovel(context.Context, *GetUsersByNovelRequest) (*GetUsersByNovelResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetUsersByNovel not implemented")
 }
 func (UnimplementedLibraryServiceServer) mustEmbedUnimplementedLibraryServiceServer() {}
 func (UnimplementedLibraryServiceServer) testEmbeddedByValue()                        {}
@@ -376,6 +392,24 @@ func _LibraryService_SaveProgress_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LibraryService_GetUsersByNovel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUsersByNovelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LibraryServiceServer).GetUsersByNovel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LibraryService_GetUsersByNovel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LibraryServiceServer).GetUsersByNovel(ctx, req.(*GetUsersByNovelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LibraryService_ServiceDesc is the grpc.ServiceDesc for LibraryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -418,6 +452,10 @@ var LibraryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SaveProgress",
 			Handler:    _LibraryService_SaveProgress_Handler,
+		},
+		{
+			MethodName: "GetUsersByNovel",
+			Handler:    _LibraryService_GetUsersByNovel_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

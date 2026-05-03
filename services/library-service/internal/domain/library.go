@@ -32,6 +32,7 @@ type LibraryRepository interface {
 	GetLibrary(userID, status string, page, pageSize int) ([]*LibraryEntry, int, error)
 	UpdateStatus(userID, novelID, status string) error
 	RemoveFromLibrary(userID, novelID string) error
+	GetUsersByNovel(novelID string) ([]string, error)
 }
 
 type BookmarkRepository interface {

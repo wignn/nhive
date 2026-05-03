@@ -38,11 +38,12 @@ type NovelEvent struct {
 }
 
 type ChapterEvent struct {
-	NovelID   string `json:"novel_id"`
-	NovelSlug string `json:"novel_slug"`
-	ChapterID string `json:"chapter_id"`
-	Number    int    `json:"number"`
-	Title     string `json:"title"`
+	NovelID    string `json:"novel_id"`
+	NovelTitle string `json:"novel_title"`
+	NovelSlug  string `json:"novel_slug"`
+	ChapterID  string `json:"chapter_id"`
+	Number     int    `json:"number"`
+	Title      string `json:"title"`
 }
 
 func (p *NATSPublisher) PublishNovelCreated(novel *domain.Novel) {
@@ -77,11 +78,11 @@ func (p *NATSPublisher) PublishNovelUpdated(novel *domain.Novel) {
 
 func (p *NATSPublisher) PublishChapterPublished(novel *domain.Novel, ch *domain.Chapter) {
 	evt := ChapterEvent{
-		NovelID: novel.ID, NovelSlug: novel.Slug,
+		NovelID: novel.ID, NovelTitle: novel.Title, NovelSlug: novel.Slug,
 		ChapterID: ch.ID, Number: ch.Number, Title: ch.Title,
 	}
 	data, _ := json.Marshal(evt)
-	if _, err := p.js.Publish("chapter.published", data); err != nil {
-		log.Printf("Failed to publish chapter.published: %v", err)
+	if _, err := p.js.Publish("novel.chapter.published", data); err != nil {
+		log.Printf("Failed to publish novel.chapter.published: %v", err)
 	}
 }

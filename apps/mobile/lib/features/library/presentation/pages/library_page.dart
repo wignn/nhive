@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/app/theme/app_theme.dart';
-import 'package:mobile/features/library/presentation/bloc/library_provider.dart';
-import 'package:mobile/features/auth/presentation/bloc/auth_provider.dart';
-import 'package:mobile/features/novels/presentation/widgets/novel_card.dart';
+import 'package:nhive/app/theme/app_theme.dart';
+import 'package:nhive/features/library/presentation/bloc/library_provider.dart';
+import 'package:nhive/features/auth/presentation/bloc/auth_provider.dart';
+import 'package:nhive/features/novels/presentation/widgets/novel_card.dart';
 
 class LibraryPage extends StatefulWidget {
   const LibraryPage({super.key});
@@ -41,7 +41,10 @@ class _LibraryPageState extends State<LibraryPage> {
                   padding: const EdgeInsets.only(right: 16),
                   child: Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.primary.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(12),
@@ -63,27 +66,34 @@ class _LibraryPageState extends State<LibraryPage> {
             color: AppTheme.primary,
             onRefresh: () => library.loadLibrary(),
             child: library.isLoading
-                ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppTheme.primary),
+                  )
                 : library.bookmarks.isEmpty
-                    ? _buildEmptyLibrary()
-                    : GridView.builder(
-                        padding: const EdgeInsets.all(16),
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                ? _buildEmptyLibrary()
+                : GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
                           mainAxisSpacing: 16,
                           crossAxisSpacing: 12,
                           childAspectRatio: 0.52,
                         ),
-                        itemCount: library.bookmarks.length,
-                        itemBuilder: (context, index) {
-                          final novel = library.bookmarks[index];
-                          return NovelCard(
-                            novel: novel,
-                            onTap: () => Navigator.pushNamed(context, '/detail', arguments: novel.slug),
-                          );
-                        },
-                      ),
+                    itemCount: library.bookmarks.length,
+                    itemBuilder: (context, index) {
+                      final novel = library.bookmarks[index];
+                      return NovelCard(
+                        novel: novel,
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          '/detail',
+                          arguments: novel.slug,
+                        ),
+                      );
+                    },
+                  ),
           ),
         );
       },
@@ -106,7 +116,11 @@ class _LibraryPageState extends State<LibraryPage> {
                   color: AppTheme.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Icon(Icons.bookmark_outline, size: 40, color: AppTheme.primary),
+                child: const Icon(
+                  Icons.bookmark_outline,
+                  size: 40,
+                  color: AppTheme.primary,
+                ),
               ),
               const SizedBox(height: 20),
               const Text(
@@ -117,7 +131,11 @@ class _LibraryPageState extends State<LibraryPage> {
               const Text(
                 'Sign in to save and manage\nyour bookmarked novels.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.muted, fontSize: 14, height: 1.5),
+                style: TextStyle(
+                  color: AppTheme.muted,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
@@ -136,7 +154,11 @@ class _LibraryPageState extends State<LibraryPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.collections_bookmark_outlined, size: 64, color: AppTheme.muted.withOpacity(0.4)),
+          Icon(
+            Icons.collections_bookmark_outlined,
+            size: 64,
+            color: AppTheme.muted.withOpacity(0.4),
+          ),
           const SizedBox(height: 16),
           const Text(
             'No bookmarks yet',

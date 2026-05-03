@@ -3,7 +3,7 @@
 # Generate protobuf code for Go services
 proto:
 	@echo "Generating protobuf code..."
-	@for dir in user novel content search comment library; do \
+	@for dir in user novel content search comment library notification; do \
 		protoc --go_out=. --go_opt=paths=source_relative \
 			--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 			proto/$$dir/v1/$$dir.proto; \
@@ -67,8 +67,11 @@ build-comment:
 build-library:
 	cd services/library-service && go build -o bin/server cmd/server/main.go
 
+build-notification:
+	cd services/notification-service && go build -o bin/server cmd/server/main.go
+
 # Build all Go services
-build-go: build-gateway build-user build-novel build-comment build-library
+build-go: build-gateway build-user build-novel build-comment build-library build-notification
 
 # Build all Rust services
 build-rust: build-content build-search
@@ -97,3 +100,4 @@ tidy:
 	cd services/novel-service && go mod tidy
 	cd services/comment-service && go mod tidy
 	cd services/library-service && go mod tidy
+	cd services/notification-service && go mod tidy

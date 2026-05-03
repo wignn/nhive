@@ -1,22 +1,23 @@
 import 'package:dio/dio.dart';
-import 'package:mobile/core/constants/api_constants.dart';
-import 'package:mobile/core/network/auth_interceptor.dart';
+import 'package:nhive/core/constants/api_constants.dart';
+import 'package:nhive/core/network/auth_interceptor.dart';
 
 class DioClient {
   final Dio _dio;
 
   DioClient(AuthInterceptor authInterceptor)
-      : _dio = Dio(
-          BaseOptions(
-            baseUrl: ApiConstants.baseUrl,
-            connectTimeout: const Duration(seconds: 20),
-            receiveTimeout: const Duration(seconds: 20),
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Internal-Key': ApiConstants.internalKey,
-            },
-          ),
-        ) {
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: ApiConstants.baseUrl,
+          connectTimeout: const Duration(seconds: 20),
+          receiveTimeout: const Duration(seconds: 20),
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Key': ApiConstants.internalKey,
+            'x-api-key': ApiConstants.apiKey,
+          },
+        ),
+      ) {
     _dio.interceptors.add(authInterceptor);
   }
 
@@ -27,7 +28,11 @@ class DioClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    return await _dio.get(path, queryParameters: queryParameters, options: options);
+    return await _dio.get(
+      path,
+      queryParameters: queryParameters,
+      options: options,
+    );
   }
 
   Future<Response> post(
@@ -36,7 +41,12 @@ class DioClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    return await _dio.post(path, data: data, queryParameters: queryParameters, options: options);
+    return await _dio.post(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
   }
 
   Future<Response> put(
@@ -45,7 +55,12 @@ class DioClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    return await _dio.put(path, data: data, queryParameters: queryParameters, options: options);
+    return await _dio.put(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
   }
 
   Future<Response> delete(
@@ -54,6 +69,11 @@ class DioClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    return await _dio.delete(path, data: data, queryParameters: queryParameters, options: options);
+    return await _dio.delete(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
   }
 }

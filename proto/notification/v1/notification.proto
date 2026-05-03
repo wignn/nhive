@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package notification.v1;
+
+option go_package = "github.com/novelhive/proto/notification/v1;notificationv1";
+
+service NotificationService {
+  rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
+  rpc MarkAsRead(MarkAsReadRequest) returns (MarkAsReadResponse);
+  rpc RegisterFCMToken(RegisterFCMTokenRequest) returns (RegisterFCMTokenResponse);
+}
+
+message Notification {
+  string id = 1;
+  string user_id = 2;
+  string type = 3;
+  string title = 4;
+  string body = 5;
+  string payload = 6; // JSON string
+  bool is_read = 7;
+  string created_at = 8;
+}
+
+message GetNotificationsRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message GetNotificationsResponse {
+  repeated Notification notifications = 1;
+  int32 total = 2;
+}
+
+message MarkAsReadRequest {
+  string id = 1;
+  string user_id = 2;
+}
+
+message MarkAsReadResponse {
+  bool success = 1;
+}
+
+message RegisterFCMTokenRequest {
+  string user_id = 1;
+  string token = 2;
+}
+
+message RegisterFCMTokenResponse {
+  bool success = 1;
+}

@@ -16,6 +16,7 @@ type Config struct {
 	NovelServiceAddr   string
 	CommentServiceAddr string
 	LibraryServiceAddr string
+	NotificationServiceAddr string
 
 	// Cloudflare R2
 	R2AccountID       string
@@ -37,6 +38,7 @@ func Load() *Config {
 		NovelServiceAddr:   getEnv("NOVEL_SERVICE_ADDR", "localhost:50052"),
 		CommentServiceAddr: getEnv("COMMENT_SERVICE_ADDR", "localhost:50055"),
 		LibraryServiceAddr: getEnv("LIBRARY_SERVICE_ADDR", "localhost:50056"),
+		NotificationServiceAddr: getEnv("NOTIFICATION_SERVICE_ADDR", "localhost:50057"),
 
 		R2AccountID:       getEnv("R2_ACCOUNT_ID", ""),
 		R2AccessKeyID:     getEnv("R2_ACCESS_KEY_ID", ""),

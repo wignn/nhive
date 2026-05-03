@@ -97,6 +97,94 @@ func (x *LibraryEntry) GetCreatedAt() string {
 	return ""
 }
 
+type GetUsersByNovelRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NovelId       string                 `protobuf:"bytes,1,opt,name=novel_id,json=novelId,proto3" json:"novel_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetUsersByNovelRequest) Reset() {
+	*x = GetUsersByNovelRequest{}
+	mi := &file_proto_library_v1_library_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUsersByNovelRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUsersByNovelRequest) ProtoMessage() {}
+
+func (x *GetUsersByNovelRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_library_v1_library_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUsersByNovelRequest.ProtoReflect.Descriptor instead.
+func (*GetUsersByNovelRequest) Descriptor() ([]byte, []int) {
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *GetUsersByNovelRequest) GetNovelId() string {
+	if x != nil {
+		return x.NovelId
+	}
+	return ""
+}
+
+type GetUsersByNovelResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserIds       []string               `protobuf:"bytes,1,rep,name=user_ids,json=userIds,proto3" json:"user_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetUsersByNovelResponse) Reset() {
+	*x = GetUsersByNovelResponse{}
+	mi := &file_proto_library_v1_library_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUsersByNovelResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUsersByNovelResponse) ProtoMessage() {}
+
+func (x *GetUsersByNovelResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_library_v1_library_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUsersByNovelResponse.ProtoReflect.Descriptor instead.
+func (*GetUsersByNovelResponse) Descriptor() ([]byte, []int) {
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GetUsersByNovelResponse) GetUserIds() []string {
+	if x != nil {
+		return x.UserIds
+	}
+	return nil
+}
+
 type GetLibraryRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
@@ -109,7 +197,7 @@ type GetLibraryRequest struct {
 
 func (x *GetLibraryRequest) Reset() {
 	*x = GetLibraryRequest{}
-	mi := &file_proto_library_v1_library_proto_msgTypes[1]
+	mi := &file_proto_library_v1_library_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -121,7 +209,7 @@ func (x *GetLibraryRequest) String() string {
 func (*GetLibraryRequest) ProtoMessage() {}
 
 func (x *GetLibraryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_library_v1_library_proto_msgTypes[1]
+	mi := &file_proto_library_v1_library_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -134,7 +222,7 @@ func (x *GetLibraryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLibraryRequest.ProtoReflect.Descriptor instead.
 func (*GetLibraryRequest) Descriptor() ([]byte, []int) {
-	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{1}
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *GetLibraryRequest) GetUserId() string {
@@ -175,7 +263,7 @@ type GetLibraryResponse struct {
 
 func (x *GetLibraryResponse) Reset() {
 	*x = GetLibraryResponse{}
-	mi := &file_proto_library_v1_library_proto_msgTypes[2]
+	mi := &file_proto_library_v1_library_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -187,7 +275,7 @@ func (x *GetLibraryResponse) String() string {
 func (*GetLibraryResponse) ProtoMessage() {}
 
 func (x *GetLibraryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_library_v1_library_proto_msgTypes[2]
+	mi := &file_proto_library_v1_library_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -200,7 +288,7 @@ func (x *GetLibraryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLibraryResponse.ProtoReflect.Descriptor instead.
 func (*GetLibraryResponse) Descriptor() ([]byte, []int) {
-	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{2}
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetLibraryResponse) GetEntries() []*LibraryEntry {
@@ -227,7 +315,7 @@ type AddToLibraryRequest struct {
 
 func (x *AddToLibraryRequest) Reset() {
 	*x = AddToLibraryRequest{}
-	mi := &file_proto_library_v1_library_proto_msgTypes[3]
+	mi := &file_proto_library_v1_library_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -239,7 +327,7 @@ func (x *AddToLibraryRequest) String() string {
 func (*AddToLibraryRequest) ProtoMessage() {}
 
 func (x *AddToLibraryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_library_v1_library_proto_msgTypes[3]
+	mi := &file_proto_library_v1_library_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -252,7 +340,7 @@ func (x *AddToLibraryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddToLibraryRequest.ProtoReflect.Descriptor instead.
 func (*AddToLibraryRequest) Descriptor() ([]byte, []int) {
-	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{3}
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *AddToLibraryRequest) GetUserId() string {
@@ -280,7 +368,7 @@ type UpdateStatusRequest struct {
 
 func (x *UpdateStatusRequest) Reset() {
 	*x = UpdateStatusRequest{}
-	mi := &file_proto_library_v1_library_proto_msgTypes[4]
+	mi := &file_proto_library_v1_library_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -292,7 +380,7 @@ func (x *UpdateStatusRequest) String() string {
 func (*UpdateStatusRequest) ProtoMessage() {}
 
 func (x *UpdateStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_library_v1_library_proto_msgTypes[4]
+	mi := &file_proto_library_v1_library_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -305,7 +393,7 @@ func (x *UpdateStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateStatusRequest.ProtoReflect.Descriptor instead.
 func (*UpdateStatusRequest) Descriptor() ([]byte, []int) {
-	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{4}
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *UpdateStatusRequest) GetUserId() string {
@@ -339,7 +427,7 @@ type RemoveFromLibraryRequest struct {
 
 func (x *RemoveFromLibraryRequest) Reset() {
 	*x = RemoveFromLibraryRequest{}
-	mi := &file_proto_library_v1_library_proto_msgTypes[5]
+	mi := &file_proto_library_v1_library_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -351,7 +439,7 @@ func (x *RemoveFromLibraryRequest) String() string {
 func (*RemoveFromLibraryRequest) ProtoMessage() {}
 
 func (x *RemoveFromLibraryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_library_v1_library_proto_msgTypes[5]
+	mi := &file_proto_library_v1_library_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -364,7 +452,7 @@ func (x *RemoveFromLibraryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveFromLibraryRequest.ProtoReflect.Descriptor instead.
 func (*RemoveFromLibraryRequest) Descriptor() ([]byte, []int) {
-	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{5}
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *RemoveFromLibraryRequest) GetUserId() string {
@@ -390,7 +478,7 @@ type RemoveResponse struct {
 
 func (x *RemoveResponse) Reset() {
 	*x = RemoveResponse{}
-	mi := &file_proto_library_v1_library_proto_msgTypes[6]
+	mi := &file_proto_library_v1_library_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -402,7 +490,7 @@ func (x *RemoveResponse) String() string {
 func (*RemoveResponse) ProtoMessage() {}
 
 func (x *RemoveResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_library_v1_library_proto_msgTypes[6]
+	mi := &file_proto_library_v1_library_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -415,7 +503,7 @@ func (x *RemoveResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveResponse.ProtoReflect.Descriptor instead.
 func (*RemoveResponse) Descriptor() ([]byte, []int) {
-	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{6}
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *RemoveResponse) GetSuccess() bool {
@@ -439,7 +527,7 @@ type Bookmark struct {
 
 func (x *Bookmark) Reset() {
 	*x = Bookmark{}
-	mi := &file_proto_library_v1_library_proto_msgTypes[7]
+	mi := &file_proto_library_v1_library_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -451,7 +539,7 @@ func (x *Bookmark) String() string {
 func (*Bookmark) ProtoMessage() {}
 
 func (x *Bookmark) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_library_v1_library_proto_msgTypes[7]
+	mi := &file_proto_library_v1_library_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -464,7 +552,7 @@ func (x *Bookmark) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Bookmark.ProtoReflect.Descriptor instead.
 func (*Bookmark) Descriptor() ([]byte, []int) {
-	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{7}
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *Bookmark) GetId() string {
@@ -519,7 +607,7 @@ type GetBookmarksRequest struct {
 
 func (x *GetBookmarksRequest) Reset() {
 	*x = GetBookmarksRequest{}
-	mi := &file_proto_library_v1_library_proto_msgTypes[8]
+	mi := &file_proto_library_v1_library_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -531,7 +619,7 @@ func (x *GetBookmarksRequest) String() string {
 func (*GetBookmarksRequest) ProtoMessage() {}
 
 func (x *GetBookmarksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_library_v1_library_proto_msgTypes[8]
+	mi := &file_proto_library_v1_library_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -544,7 +632,7 @@ func (x *GetBookmarksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBookmarksRequest.ProtoReflect.Descriptor instead.
 func (*GetBookmarksRequest) Descriptor() ([]byte, []int) {
-	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{8}
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetBookmarksRequest) GetUserId() string {
@@ -570,7 +658,7 @@ type GetBookmarksResponse struct {
 
 func (x *GetBookmarksResponse) Reset() {
 	*x = GetBookmarksResponse{}
-	mi := &file_proto_library_v1_library_proto_msgTypes[9]
+	mi := &file_proto_library_v1_library_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -582,7 +670,7 @@ func (x *GetBookmarksResponse) String() string {
 func (*GetBookmarksResponse) ProtoMessage() {}
 
 func (x *GetBookmarksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_library_v1_library_proto_msgTypes[9]
+	mi := &file_proto_library_v1_library_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -595,7 +683,7 @@ func (x *GetBookmarksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBookmarksResponse.ProtoReflect.Descriptor instead.
 func (*GetBookmarksResponse) Descriptor() ([]byte, []int) {
-	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{9}
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetBookmarksResponse) GetBookmarks() []*Bookmark {
@@ -617,7 +705,7 @@ type AddBookmarkRequest struct {
 
 func (x *AddBookmarkRequest) Reset() {
 	*x = AddBookmarkRequest{}
-	mi := &file_proto_library_v1_library_proto_msgTypes[10]
+	mi := &file_proto_library_v1_library_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -629,7 +717,7 @@ func (x *AddBookmarkRequest) String() string {
 func (*AddBookmarkRequest) ProtoMessage() {}
 
 func (x *AddBookmarkRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_library_v1_library_proto_msgTypes[10]
+	mi := &file_proto_library_v1_library_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -642,7 +730,7 @@ func (x *AddBookmarkRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddBookmarkRequest.ProtoReflect.Descriptor instead.
 func (*AddBookmarkRequest) Descriptor() ([]byte, []int) {
-	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{10}
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *AddBookmarkRequest) GetUserId() string {
@@ -683,7 +771,7 @@ type RemoveBookmarkRequest struct {
 
 func (x *RemoveBookmarkRequest) Reset() {
 	*x = RemoveBookmarkRequest{}
-	mi := &file_proto_library_v1_library_proto_msgTypes[11]
+	mi := &file_proto_library_v1_library_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -695,7 +783,7 @@ func (x *RemoveBookmarkRequest) String() string {
 func (*RemoveBookmarkRequest) ProtoMessage() {}
 
 func (x *RemoveBookmarkRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_library_v1_library_proto_msgTypes[11]
+	mi := &file_proto_library_v1_library_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -708,7 +796,7 @@ func (x *RemoveBookmarkRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveBookmarkRequest.ProtoReflect.Descriptor instead.
 func (*RemoveBookmarkRequest) Descriptor() ([]byte, []int) {
-	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{11}
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *RemoveBookmarkRequest) GetBookmarkId() string {
@@ -738,7 +826,7 @@ type ReadingProgress struct {
 
 func (x *ReadingProgress) Reset() {
 	*x = ReadingProgress{}
-	mi := &file_proto_library_v1_library_proto_msgTypes[12]
+	mi := &file_proto_library_v1_library_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -750,7 +838,7 @@ func (x *ReadingProgress) String() string {
 func (*ReadingProgress) ProtoMessage() {}
 
 func (x *ReadingProgress) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_library_v1_library_proto_msgTypes[12]
+	mi := &file_proto_library_v1_library_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -763,7 +851,7 @@ func (x *ReadingProgress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReadingProgress.ProtoReflect.Descriptor instead.
 func (*ReadingProgress) Descriptor() ([]byte, []int) {
-	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{12}
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ReadingProgress) GetUserId() string {
@@ -811,7 +899,7 @@ type GetProgressRequest struct {
 
 func (x *GetProgressRequest) Reset() {
 	*x = GetProgressRequest{}
-	mi := &file_proto_library_v1_library_proto_msgTypes[13]
+	mi := &file_proto_library_v1_library_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -823,7 +911,7 @@ func (x *GetProgressRequest) String() string {
 func (*GetProgressRequest) ProtoMessage() {}
 
 func (x *GetProgressRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_library_v1_library_proto_msgTypes[13]
+	mi := &file_proto_library_v1_library_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -836,7 +924,7 @@ func (x *GetProgressRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProgressRequest.ProtoReflect.Descriptor instead.
 func (*GetProgressRequest) Descriptor() ([]byte, []int) {
-	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{13}
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *GetProgressRequest) GetUserId() string {
@@ -865,7 +953,7 @@ type SaveProgressRequest struct {
 
 func (x *SaveProgressRequest) Reset() {
 	*x = SaveProgressRequest{}
-	mi := &file_proto_library_v1_library_proto_msgTypes[14]
+	mi := &file_proto_library_v1_library_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -877,7 +965,7 @@ func (x *SaveProgressRequest) String() string {
 func (*SaveProgressRequest) ProtoMessage() {}
 
 func (x *SaveProgressRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_library_v1_library_proto_msgTypes[14]
+	mi := &file_proto_library_v1_library_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -890,7 +978,7 @@ func (x *SaveProgressRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveProgressRequest.ProtoReflect.Descriptor instead.
 func (*SaveProgressRequest) Descriptor() ([]byte, []int) {
-	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{14}
+	return file_proto_library_v1_library_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *SaveProgressRequest) GetUserId() string {
@@ -933,7 +1021,11 @@ const file_proto_library_v1_library_proto_rawDesc = "" +
 	"\bnovel_id\x18\x03 \x01(\tR\anovelId\x12\x16\n" +
 	"\x06status\x18\x04 \x01(\tR\x06status\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\tR\tcreatedAt\"u\n" +
+	"created_at\x18\x05 \x01(\tR\tcreatedAt\"3\n" +
+	"\x16GetUsersByNovelRequest\x12\x19\n" +
+	"\bnovel_id\x18\x01 \x01(\tR\anovelId\"4\n" +
+	"\x17GetUsersByNovelResponse\x12\x19\n" +
+	"\buser_ids\x18\x01 \x03(\tR\auserIds\"u\n" +
 	"\x11GetLibraryRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\x12\x12\n" +
@@ -992,7 +1084,7 @@ const file_proto_library_v1_library_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
 	"\bnovel_id\x18\x02 \x01(\tR\anovelId\x12%\n" +
 	"\x0echapter_number\x18\x03 \x01(\x05R\rchapterNumber\x12'\n" +
-	"\x0fscroll_position\x18\x04 \x01(\x02R\x0escrollPosition2\xcd\x05\n" +
+	"\x0fscroll_position\x18\x04 \x01(\x02R\x0escrollPosition2\xa9\x06\n" +
 	"\x0eLibraryService\x12K\n" +
 	"\n" +
 	"GetLibrary\x12\x1d.library.v1.GetLibraryRequest\x1a\x1e.library.v1.GetLibraryResponse\x12I\n" +
@@ -1003,7 +1095,8 @@ const file_proto_library_v1_library_proto_rawDesc = "" +
 	"\vAddBookmark\x12\x1e.library.v1.AddBookmarkRequest\x1a\x14.library.v1.Bookmark\x12O\n" +
 	"\x0eRemoveBookmark\x12!.library.v1.RemoveBookmarkRequest\x1a\x1a.library.v1.RemoveResponse\x12J\n" +
 	"\vGetProgress\x12\x1e.library.v1.GetProgressRequest\x1a\x1b.library.v1.ReadingProgress\x12L\n" +
-	"\fSaveProgress\x12\x1f.library.v1.SaveProgressRequest\x1a\x1b.library.v1.ReadingProgressB1Z/github.com/novelhive/proto/library/v1;libraryv1b\x06proto3"
+	"\fSaveProgress\x12\x1f.library.v1.SaveProgressRequest\x1a\x1b.library.v1.ReadingProgress\x12Z\n" +
+	"\x0fGetUsersByNovel\x12\".library.v1.GetUsersByNovelRequest\x1a#.library.v1.GetUsersByNovelResponseB1Z/github.com/novelhive/proto/library/v1;libraryv1b\x06proto3"
 
 var (
 	file_proto_library_v1_library_proto_rawDescOnce sync.Once
@@ -1017,47 +1110,51 @@ func file_proto_library_v1_library_proto_rawDescGZIP() []byte {
 	return file_proto_library_v1_library_proto_rawDescData
 }
 
-var file_proto_library_v1_library_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_proto_library_v1_library_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_proto_library_v1_library_proto_goTypes = []any{
 	(*LibraryEntry)(nil),             // 0: library.v1.LibraryEntry
-	(*GetLibraryRequest)(nil),        // 1: library.v1.GetLibraryRequest
-	(*GetLibraryResponse)(nil),       // 2: library.v1.GetLibraryResponse
-	(*AddToLibraryRequest)(nil),      // 3: library.v1.AddToLibraryRequest
-	(*UpdateStatusRequest)(nil),      // 4: library.v1.UpdateStatusRequest
-	(*RemoveFromLibraryRequest)(nil), // 5: library.v1.RemoveFromLibraryRequest
-	(*RemoveResponse)(nil),           // 6: library.v1.RemoveResponse
-	(*Bookmark)(nil),                 // 7: library.v1.Bookmark
-	(*GetBookmarksRequest)(nil),      // 8: library.v1.GetBookmarksRequest
-	(*GetBookmarksResponse)(nil),     // 9: library.v1.GetBookmarksResponse
-	(*AddBookmarkRequest)(nil),       // 10: library.v1.AddBookmarkRequest
-	(*RemoveBookmarkRequest)(nil),    // 11: library.v1.RemoveBookmarkRequest
-	(*ReadingProgress)(nil),          // 12: library.v1.ReadingProgress
-	(*GetProgressRequest)(nil),       // 13: library.v1.GetProgressRequest
-	(*SaveProgressRequest)(nil),      // 14: library.v1.SaveProgressRequest
+	(*GetUsersByNovelRequest)(nil),   // 1: library.v1.GetUsersByNovelRequest
+	(*GetUsersByNovelResponse)(nil),  // 2: library.v1.GetUsersByNovelResponse
+	(*GetLibraryRequest)(nil),        // 3: library.v1.GetLibraryRequest
+	(*GetLibraryResponse)(nil),       // 4: library.v1.GetLibraryResponse
+	(*AddToLibraryRequest)(nil),      // 5: library.v1.AddToLibraryRequest
+	(*UpdateStatusRequest)(nil),      // 6: library.v1.UpdateStatusRequest
+	(*RemoveFromLibraryRequest)(nil), // 7: library.v1.RemoveFromLibraryRequest
+	(*RemoveResponse)(nil),           // 8: library.v1.RemoveResponse
+	(*Bookmark)(nil),                 // 9: library.v1.Bookmark
+	(*GetBookmarksRequest)(nil),      // 10: library.v1.GetBookmarksRequest
+	(*GetBookmarksResponse)(nil),     // 11: library.v1.GetBookmarksResponse
+	(*AddBookmarkRequest)(nil),       // 12: library.v1.AddBookmarkRequest
+	(*RemoveBookmarkRequest)(nil),    // 13: library.v1.RemoveBookmarkRequest
+	(*ReadingProgress)(nil),          // 14: library.v1.ReadingProgress
+	(*GetProgressRequest)(nil),       // 15: library.v1.GetProgressRequest
+	(*SaveProgressRequest)(nil),      // 16: library.v1.SaveProgressRequest
 }
 var file_proto_library_v1_library_proto_depIdxs = []int32{
 	0,  // 0: library.v1.GetLibraryResponse.entries:type_name -> library.v1.LibraryEntry
-	7,  // 1: library.v1.GetBookmarksResponse.bookmarks:type_name -> library.v1.Bookmark
-	1,  // 2: library.v1.LibraryService.GetLibrary:input_type -> library.v1.GetLibraryRequest
-	3,  // 3: library.v1.LibraryService.AddToLibrary:input_type -> library.v1.AddToLibraryRequest
-	4,  // 4: library.v1.LibraryService.UpdateStatus:input_type -> library.v1.UpdateStatusRequest
-	5,  // 5: library.v1.LibraryService.RemoveFromLibrary:input_type -> library.v1.RemoveFromLibraryRequest
-	8,  // 6: library.v1.LibraryService.GetBookmarks:input_type -> library.v1.GetBookmarksRequest
-	10, // 7: library.v1.LibraryService.AddBookmark:input_type -> library.v1.AddBookmarkRequest
-	11, // 8: library.v1.LibraryService.RemoveBookmark:input_type -> library.v1.RemoveBookmarkRequest
-	13, // 9: library.v1.LibraryService.GetProgress:input_type -> library.v1.GetProgressRequest
-	14, // 10: library.v1.LibraryService.SaveProgress:input_type -> library.v1.SaveProgressRequest
-	2,  // 11: library.v1.LibraryService.GetLibrary:output_type -> library.v1.GetLibraryResponse
-	0,  // 12: library.v1.LibraryService.AddToLibrary:output_type -> library.v1.LibraryEntry
-	0,  // 13: library.v1.LibraryService.UpdateStatus:output_type -> library.v1.LibraryEntry
-	6,  // 14: library.v1.LibraryService.RemoveFromLibrary:output_type -> library.v1.RemoveResponse
-	9,  // 15: library.v1.LibraryService.GetBookmarks:output_type -> library.v1.GetBookmarksResponse
-	7,  // 16: library.v1.LibraryService.AddBookmark:output_type -> library.v1.Bookmark
-	6,  // 17: library.v1.LibraryService.RemoveBookmark:output_type -> library.v1.RemoveResponse
-	12, // 18: library.v1.LibraryService.GetProgress:output_type -> library.v1.ReadingProgress
-	12, // 19: library.v1.LibraryService.SaveProgress:output_type -> library.v1.ReadingProgress
-	11, // [11:20] is the sub-list for method output_type
-	2,  // [2:11] is the sub-list for method input_type
+	9,  // 1: library.v1.GetBookmarksResponse.bookmarks:type_name -> library.v1.Bookmark
+	3,  // 2: library.v1.LibraryService.GetLibrary:input_type -> library.v1.GetLibraryRequest
+	5,  // 3: library.v1.LibraryService.AddToLibrary:input_type -> library.v1.AddToLibraryRequest
+	6,  // 4: library.v1.LibraryService.UpdateStatus:input_type -> library.v1.UpdateStatusRequest
+	7,  // 5: library.v1.LibraryService.RemoveFromLibrary:input_type -> library.v1.RemoveFromLibraryRequest
+	10, // 6: library.v1.LibraryService.GetBookmarks:input_type -> library.v1.GetBookmarksRequest
+	12, // 7: library.v1.LibraryService.AddBookmark:input_type -> library.v1.AddBookmarkRequest
+	13, // 8: library.v1.LibraryService.RemoveBookmark:input_type -> library.v1.RemoveBookmarkRequest
+	15, // 9: library.v1.LibraryService.GetProgress:input_type -> library.v1.GetProgressRequest
+	16, // 10: library.v1.LibraryService.SaveProgress:input_type -> library.v1.SaveProgressRequest
+	1,  // 11: library.v1.LibraryService.GetUsersByNovel:input_type -> library.v1.GetUsersByNovelRequest
+	4,  // 12: library.v1.LibraryService.GetLibrary:output_type -> library.v1.GetLibraryResponse
+	0,  // 13: library.v1.LibraryService.AddToLibrary:output_type -> library.v1.LibraryEntry
+	0,  // 14: library.v1.LibraryService.UpdateStatus:output_type -> library.v1.LibraryEntry
+	8,  // 15: library.v1.LibraryService.RemoveFromLibrary:output_type -> library.v1.RemoveResponse
+	11, // 16: library.v1.LibraryService.GetBookmarks:output_type -> library.v1.GetBookmarksResponse
+	9,  // 17: library.v1.LibraryService.AddBookmark:output_type -> library.v1.Bookmark
+	8,  // 18: library.v1.LibraryService.RemoveBookmark:output_type -> library.v1.RemoveResponse
+	14, // 19: library.v1.LibraryService.GetProgress:output_type -> library.v1.ReadingProgress
+	14, // 20: library.v1.LibraryService.SaveProgress:output_type -> library.v1.ReadingProgress
+	2,  // 21: library.v1.LibraryService.GetUsersByNovel:output_type -> library.v1.GetUsersByNovelResponse
+	12, // [12:22] is the sub-list for method output_type
+	2,  // [2:12] is the sub-list for method input_type
 	2,  // [2:2] is the sub-list for extension type_name
 	2,  // [2:2] is the sub-list for extension extendee
 	0,  // [0:2] is the sub-list for field type_name
@@ -1074,7 +1171,7 @@ func file_proto_library_v1_library_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_library_v1_library_proto_rawDesc), len(file_proto_library_v1_library_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

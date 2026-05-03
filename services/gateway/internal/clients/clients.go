@@ -6,22 +6,22 @@ import (
 	commentv1 "github.com/novelhive/proto/comment/v1"
 	libraryv1 "github.com/novelhive/proto/library/v1"
 	novelv1 "github.com/novelhive/proto/novel/v1"
-	userv1 "github.com/novelhive/proto/user/v1"
-	"github.com/novelhive/pkg/grpcauth"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-)
-
-type Clients struct {
-	Novel   novelv1.NovelServiceClient
-	User    userv1.UserServiceClient
-	Comment commentv1.CommentServiceClient
-	Library libraryv1.LibraryServiceClient
+	commentv1 "github.com/novelhive/proto/comment/v1"
+	libraryv1 "github.com/novelhive/proto/library/v1"
+	notificationv1 "github.com/novelhive/proto/notification/v1"
+	novelv1 "github.com/novelhive/proto/novel/v1"
+	...
+	type Clients struct {
+	Novel        novelv1.NovelServiceClient
+	User         userv1.UserServiceClient
+	Comment      commentv1.CommentServiceClient
+	Library      libraryv1.LibraryServiceClient
+	Notification notificationv1.NotificationServiceClient
 
 	conns []*grpc.ClientConn
-}
+	}
 
-func New(userAddr, novelAddr, commentAddr, libraryAddr, apiKey string) *Clients {
+	func New(userAddr, novelAddr, commentAddr, libraryAddr, notificationAddr, apiKey string) *Clients {
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithPerRPCCredentials(grpcauth.NewCredentials(apiKey)),
@@ -31,13 +31,18 @@ func New(userAddr, novelAddr, commentAddr, libraryAddr, apiKey string) *Clients 
 	novelConn := mustDial(novelAddr, opts)
 	commentConn := mustDial(commentAddr, opts)
 	libraryConn := mustDial(libraryAddr, opts)
+	notificationConn := mustDial(notificationAddr, opts)
 
 	return &Clients{
-		User:    userv1.NewUserServiceClient(userConn),
-		Novel:   novelv1.NewNovelServiceClient(novelConn),
-		Comment: commentv1.NewCommentServiceClient(commentConn),
-		Library: libraryv1.NewLibraryServiceClient(libraryConn),
-		conns:   []*grpc.ClientConn{userConn, novelConn, commentConn, libraryConn},
+		User:         userv1.NewUserServiceClient(userConn),
+		Novel:        novelv1.NewNovelServiceClient(novelConn),
+		Comment:      commentv1.NewCommentServiceClient(commentConn),
+		Library:      libraryv1.NewLibraryServiceClient(libraryConn),
+		Notification: notificationv1.NewNotificationServiceClient(notificationConn),
+		conns:        []*grpc.ClientConn{userConn, novelConn, commentConn, libraryConn, notificationConn},
+	}
+	}
+
 	}
 }
 

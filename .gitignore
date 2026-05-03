@@ -1,6 +1,14 @@
 # General
 /.env
+# Firebase secrets
+*-firebase-adminsdk-*.json
+serviceAccountKey.json
+google-services.json
 **/.env
+# Firebase secrets
+*-firebase-adminsdk-*.json
+serviceAccountKey.json
+google-services.json
 .env.*
 .env.local
 *.log

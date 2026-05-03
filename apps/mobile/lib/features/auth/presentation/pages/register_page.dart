@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/app/theme/app_theme.dart';
-import 'package:mobile/features/auth/presentation/bloc/auth_provider.dart';
+import 'package:nhive/app/theme/app_theme.dart';
+import 'package:nhive/features/auth/presentation/bloc/auth_provider.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -42,14 +42,20 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (password != confirm) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match'), backgroundColor: Colors.redAccent),
+        const SnackBar(
+          content: Text('Passwords do not match'),
+          backgroundColor: Colors.redAccent,
+        ),
       );
       return;
     }
 
     if (password.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 6 characters'), backgroundColor: Colors.redAccent),
+        const SnackBar(
+          content: Text('Password must be at least 6 characters'),
+          backgroundColor: Colors.redAccent,
+        ),
       );
       return;
     }
@@ -82,7 +88,11 @@ class _RegisterPageState extends State<RegisterPage> {
                 shape: BoxShape.circle,
                 color: AppTheme.primary.withOpacity(0.15),
                 boxShadow: [
-                  BoxShadow(color: AppTheme.primary.withOpacity(0.2), blurRadius: 100, spreadRadius: 50),
+                  BoxShadow(
+                    color: AppTheme.primary.withOpacity(0.2),
+                    blurRadius: 100,
+                    spreadRadius: 50,
+                  ),
                 ],
               ),
             ),
@@ -97,7 +107,11 @@ class _RegisterPageState extends State<RegisterPage> {
                 shape: BoxShape.circle,
                 color: AppTheme.primary.withOpacity(0.1),
                 boxShadow: [
-                  BoxShadow(color: AppTheme.primary.withOpacity(0.15), blurRadius: 80, spreadRadius: 40),
+                  BoxShadow(
+                    color: AppTheme.primary.withOpacity(0.15),
+                    blurRadius: 80,
+                    spreadRadius: 40,
+                  ),
                 ],
               ),
             ),
@@ -106,7 +120,10 @@ class _RegisterPageState extends State<RegisterPage> {
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 16.0,
+                ),
                 child: Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
@@ -127,7 +144,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     children: [
                       Center(
                         child: ShaderMask(
-                          shaderCallback: (bounds) => AppTheme.brandGradient.createShader(bounds),
+                          shaderCallback: (bounds) =>
+                              AppTheme.brandGradient.createShader(bounds),
                           child: Text(
                             'Join NovelHive',
                             style: Theme.of(context).textTheme.displaySmall,
@@ -138,9 +156,8 @@ class _RegisterPageState extends State<RegisterPage> {
                       Text(
                         'Create your account and start reading.',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppTheme.muted,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(color: AppTheme.muted),
                       ),
                       const SizedBox(height: 40),
                       TextField(
@@ -148,7 +165,10 @@ class _RegisterPageState extends State<RegisterPage> {
                         textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
                           hintText: 'Username',
-                          prefixIcon: Icon(Icons.person_outline, color: AppTheme.muted),
+                          prefixIcon: Icon(
+                            Icons.person_outline,
+                            color: AppTheme.muted,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 14),
@@ -158,7 +178,10 @@ class _RegisterPageState extends State<RegisterPage> {
                         textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
                           hintText: 'Email',
-                          prefixIcon: Icon(Icons.email_outlined, color: AppTheme.muted),
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            color: AppTheme.muted,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 14),
@@ -168,11 +191,18 @@ class _RegisterPageState extends State<RegisterPage> {
                         textInputAction: TextInputAction.next,
                         decoration: InputDecoration(
                           hintText: 'Password',
-                          prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.muted),
+                          prefixIcon: const Icon(
+                            Icons.lock_outline,
+                            color: AppTheme.muted,
+                          ),
                           suffixIcon: IconButton(
-                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
                             icon: Icon(
-                              _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              _obscurePassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
                               color: AppTheme.muted,
                             ),
                           ),
@@ -186,11 +216,18 @@ class _RegisterPageState extends State<RegisterPage> {
                         onSubmitted: (_) => _handleRegister(),
                         decoration: InputDecoration(
                           hintText: 'Confirm Password',
-                          prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.muted),
+                          prefixIcon: const Icon(
+                            Icons.lock_outline,
+                            color: AppTheme.muted,
+                          ),
                           suffixIcon: IconButton(
-                            onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                            onPressed: () => setState(
+                              () => _obscureConfirm = !_obscureConfirm,
+                            ),
                             icon: Icon(
-                              _obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              _obscureConfirm
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
                               color: AppTheme.muted,
                             ),
                           ),
@@ -215,16 +252,26 @@ class _RegisterPageState extends State<RegisterPage> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.transparent,
                                 shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
-                              onPressed: auth.status == AuthStatus.loading ? null : _handleRegister,
+                              onPressed: auth.status == AuthStatus.loading
+                                  ? null
+                                  : _handleRegister,
                               child: auth.status == AuthStatus.loading
                                   ? const SizedBox(
                                       height: 22,
                                       width: 22,
-                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
                                     )
-                                  : const Text('Create Account', style: TextStyle(fontSize: 16)),
+                                  : const Text(
+                                      'Create Account',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
                             ),
                           );
                         },
@@ -233,12 +280,21 @@ class _RegisterPageState extends State<RegisterPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text('Already have an account?', style: TextStyle(color: AppTheme.muted)),
+                          const Text(
+                            'Already have an account?',
+                            style: TextStyle(color: AppTheme.muted),
+                          ),
                           TextButton(
                             onPressed: () {
                               Navigator.pushReplacementNamed(context, '/login');
                             },
-                            child: const Text('Sign In', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
+                            child: const Text(
+                              'Sign In',
+                              style: TextStyle(
+                                color: AppTheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -253,7 +309,10 @@ class _RegisterPageState extends State<RegisterPage> {
             left: 8,
             child: IconButton(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back_ios_new, color: AppTheme.foreground),
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                color: AppTheme.foreground,
+              ),
             ),
           ),
         ],

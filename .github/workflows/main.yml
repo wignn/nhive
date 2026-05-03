@@ -32,6 +32,8 @@ jobs:
             dockerfile: services/content-service/Dockerfile
           - image: nhive-comment-service
             dockerfile: services/comment-service/Dockerfile
+          - image: nhive-notification-service
+            dockerfile: services/notification-service/Dockerfile
 
     steps:
       - name: Check out repository
@@ -90,6 +92,18 @@ jobs:
           source: "docker-compose.yml,scripts/"
           target: "~/nhive"
           overwrite: true
+
+      - name: Setup Firebase Credentials on VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            mkdir -p ~/nhive/services/notification-service
+            echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}' > ~/nhive/services/notification-service/nhive-71b46-firebase-adminsdk-fbsvc-4ae7717497.json
+            chmod 600 ~/nhive/services/notification-service/nhive-71b46-firebase-adminsdk-fbsvc-4ae7717497.json
 
       - name: Pull, deploy, and health-check
         uses: appleboy/ssh-action@v1.2.0

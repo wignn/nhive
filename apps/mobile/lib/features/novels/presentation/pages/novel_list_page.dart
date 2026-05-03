@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:mobile/app/theme/app_theme.dart';
-import 'package:mobile/features/novels/presentation/widgets/novel_card.dart';
-import 'package:mobile/features/novels/presentation/bloc/novel_provider.dart';
-import 'package:mobile/features/auth/presentation/bloc/auth_provider.dart';
-import 'package:mobile/features/library/presentation/pages/library_page.dart';
-import 'package:mobile/features/search/presentation/pages/search_page.dart';
-import 'package:mobile/features/auth/presentation/pages/profile_page.dart';
+import 'package:nhive/app/theme/app_theme.dart';
+import 'package:nhive/features/novels/presentation/widgets/novel_card.dart';
+import 'package:nhive/features/novels/presentation/bloc/novel_provider.dart';
+import 'package:nhive/features/auth/presentation/bloc/auth_provider.dart';
+import 'package:nhive/features/library/presentation/pages/library_page.dart';
+import 'package:nhive/features/search/presentation/pages/search_page.dart';
+import 'package:nhive/features/auth/presentation/pages/profile_page.dart';
 
 class NovelListPage extends StatefulWidget {
   const NovelListPage({super.key});
@@ -38,10 +38,7 @@ class _NovelListPageState extends State<NovelListPage> {
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: AppTheme.background,
@@ -65,10 +62,22 @@ class _NovelListPageState extends State<NovelListPage> {
           selectedFontSize: 12,
           unselectedFontSize: 12,
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.bookmark_outline), activeIcon: Icon(Icons.bookmark), label: 'Library'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.bookmark_outline),
+              activeIcon: Icon(Icons.bookmark),
+              label: 'Library',
+            ),
             BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-            BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Profile',
+            ),
           ],
         ),
       ),
@@ -94,7 +103,8 @@ class _HomeView extends StatelessWidget {
                 backgroundColor: AppTheme.background,
                 elevation: 0,
                 title: ShaderMask(
-                  shaderCallback: (bounds) => AppTheme.brandGradient.createShader(bounds),
+                  shaderCallback: (bounds) =>
+                      AppTheme.brandGradient.createShader(bounds),
                   child: const Text(
                     'NovelHive',
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 24),
@@ -114,11 +124,18 @@ class _HomeView extends StatelessWidget {
                   padding: EdgeInsets.fromLTRB(16, 16, 16, 12),
                   child: Row(
                     children: [
-                      Icon(Icons.local_fire_department, color: AppTheme.primary, size: 22),
+                      Icon(
+                        Icons.local_fire_department,
+                        color: AppTheme.primary,
+                        size: 22,
+                      ),
                       SizedBox(width: 8),
                       Text(
                         'Trending Now',
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -134,14 +151,19 @@ class _HomeView extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           scrollDirection: Axis.horizontal,
                           itemCount: provider.novels.take(5).length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 12),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: 12),
                           itemBuilder: (context, index) {
                             final novel = provider.novels[index];
                             return SizedBox(
                               width: 130,
                               child: NovelCard(
                                 novel: novel,
-                                onTap: () => Navigator.pushNamed(context, '/detail', arguments: novel.slug),
+                                onTap: () => Navigator.pushNamed(
+                                  context,
+                                  '/detail',
+                                  arguments: novel.slug,
+                                ),
                               ),
                             );
                           },
@@ -159,7 +181,10 @@ class _HomeView extends StatelessWidget {
                       SizedBox(width: 8),
                       Text(
                         'Recently Updated',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -170,12 +195,13 @@ class _HomeView extends StatelessWidget {
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 0.52,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.52,
+                        ),
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => _buildCardShimmer(),
                       childCount: 6,
@@ -188,7 +214,11 @@ class _HomeView extends StatelessWidget {
                     padding: const EdgeInsets.all(32),
                     child: Column(
                       children: [
-                        const Icon(Icons.cloud_off, size: 48, color: AppTheme.muted),
+                        const Icon(
+                          Icons.cloud_off,
+                          size: 48,
+                          color: AppTheme.muted,
+                        ),
                         const SizedBox(height: 12),
                         Text(
                           'Failed to load novels',
@@ -208,22 +238,24 @@ class _HomeView extends StatelessWidget {
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 0.52,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final novel = provider.novels[index];
-                        return NovelCard(
-                          novel: novel,
-                          onTap: () => Navigator.pushNamed(context, '/detail', arguments: novel.slug),
-                        );
-                      },
-                      childCount: provider.novels.length,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.52,
+                        ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final novel = provider.novels[index];
+                      return NovelCard(
+                        novel: novel,
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          '/detail',
+                          arguments: novel.slug,
+                        ),
+                      );
+                    }, childCount: provider.novels.length),
                   ),
                 ),
 
@@ -258,9 +290,23 @@ class _HomeView extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              Container(height: 14, width: 100, decoration: BoxDecoration(color: AppTheme.secondary, borderRadius: BorderRadius.circular(4))),
+              Container(
+                height: 14,
+                width: 100,
+                decoration: BoxDecoration(
+                  color: AppTheme.secondary,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
               const SizedBox(height: 4),
-              Container(height: 10, width: 60, decoration: BoxDecoration(color: AppTheme.secondary, borderRadius: BorderRadius.circular(4))),
+              Container(
+                height: 10,
+                width: 60,
+                decoration: BoxDecoration(
+                  color: AppTheme.secondary,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
             ],
           ),
         ),
@@ -284,9 +330,23 @@ class _HomeView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Container(height: 14, width: double.infinity, decoration: BoxDecoration(color: AppTheme.secondary, borderRadius: BorderRadius.circular(4))),
+          Container(
+            height: 14,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppTheme.secondary,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
           const SizedBox(height: 4),
-          Container(height: 10, width: 60, decoration: BoxDecoration(color: AppTheme.secondary, borderRadius: BorderRadius.circular(4))),
+          Container(
+            height: 10,
+            width: 60,
+            decoration: BoxDecoration(
+              color: AppTheme.secondary,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
         ],
       ),
     );
