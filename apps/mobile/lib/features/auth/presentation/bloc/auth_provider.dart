@@ -73,6 +73,26 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> loginWithGoogle(String idToken) async {
+    _status = AuthStatus.loading;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _user = await _repository.loginWithGoogle(idToken);
+      _status = AuthStatus.authenticated;
+      _libraryProvider?.loadLibrary();
+      await _notificationService.registerCurrentToken();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = _parseError(e);
+      _status = AuthStatus.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> register(String username, String email, String password) async {
     _status = AuthStatus.loading;
     _error = null;

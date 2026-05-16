@@ -12,10 +12,10 @@ type Config struct {
 	GatewayAPIKeys []string
 
 	// gRPC service addresses
-	UserServiceAddr    string
-	NovelServiceAddr   string
-	CommentServiceAddr string
-	LibraryServiceAddr string
+	UserServiceAddr         string
+	NovelServiceAddr        string
+	CommentServiceAddr      string
+	LibraryServiceAddr      string
 	NotificationServiceAddr string
 
 	// Cloudflare R2
@@ -25,6 +25,9 @@ type Config struct {
 	R2BucketName      string
 	R2PublicURL       string
 	R2Endpoint        string
+
+	// Google OAuth
+	GoogleClientIDs []string
 }
 
 func Load() *Config {
@@ -34,10 +37,10 @@ func Load() *Config {
 		InternalAPIKey: getEnv("INTERNAL_API_KEY", ""),
 		GatewayAPIKeys: getCSVEnv("GATEWAY_API_KEYS"),
 
-		UserServiceAddr:    getEnv("USER_SERVICE_ADDR", "localhost:50051"),
-		NovelServiceAddr:   getEnv("NOVEL_SERVICE_ADDR", "localhost:50052"),
-		CommentServiceAddr: getEnv("COMMENT_SERVICE_ADDR", "localhost:50055"),
-		LibraryServiceAddr: getEnv("LIBRARY_SERVICE_ADDR", "localhost:50056"),
+		UserServiceAddr:         getEnv("USER_SERVICE_ADDR", "localhost:50051"),
+		NovelServiceAddr:        getEnv("NOVEL_SERVICE_ADDR", "localhost:50052"),
+		CommentServiceAddr:      getEnv("COMMENT_SERVICE_ADDR", "localhost:50055"),
+		LibraryServiceAddr:      getEnv("LIBRARY_SERVICE_ADDR", "localhost:50056"),
 		NotificationServiceAddr: getEnv("NOTIFICATION_SERVICE_ADDR", "localhost:50057"),
 
 		R2AccountID:       getEnv("R2_ACCOUNT_ID", ""),
@@ -46,6 +49,8 @@ func Load() *Config {
 		R2BucketName:      getEnv("R2_BUCKET_NAME", ""),
 		R2PublicURL:       getEnv("R2_PUBLIC_URL", ""),
 		R2Endpoint:        getEnv("R2_URL", ""),
+
+		GoogleClientIDs: googleClientIDs(),
 	}
 }
 
@@ -71,4 +76,15 @@ func getCSVEnv(key string) []string {
 		}
 	}
 	return values
+}
+
+func googleClientIDs() []string {
+	values := getCSVEnv("GOOGLE_CLIENT_IDS")
+	if len(values) > 0 {
+		return values
+	}
+	if v := strings.TrimSpace(os.Getenv("GOOGLE_CLIENT_ID")); v != "" {
+		return []string{v}
+	}
+	return nil
 }

@@ -13,6 +13,16 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<User> login(String email, String password) async {
     final data = await remoteDataSource.login(email, password);
+    return _persistSessionAndBuildUser(data);
+  }
+
+  @override
+  Future<User> loginWithGoogle(String idToken) async {
+    final data = await remoteDataSource.loginWithGoogle(idToken);
+    return _persistSessionAndBuildUser(data);
+  }
+
+  Future<User> _persistSessionAndBuildUser(Map<String, dynamic> data) async {
     final accessToken = data['access_token'];
     final refreshToken = data['refresh_token'];
 

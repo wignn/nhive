@@ -23,6 +23,12 @@ type LoginInput struct {
 	Password string
 }
 
+type OAuthLoginInput struct {
+	Email     string
+	Username  string
+	AvatarURL string
+}
+
 type UserRepository interface {
 	Create(user *User) error
 	GetByID(id string) (*User, error)

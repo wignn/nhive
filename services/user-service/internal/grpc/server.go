@@ -19,6 +19,7 @@ type UserServiceServer struct {
 
 type UserProfileServiceServer interface {
 	UpdateAvatar(context.Context, *structpb.Struct) (*structpb.Struct, error)
+	SignInWithOAuth(context.Context, *structpb.Struct) (*structpb.Struct, error)
 }
 
 func NewUserServiceServer(uc *usecase.UserUsecase) *UserServiceServer {
@@ -174,6 +175,35 @@ func (s *UserServiceServer) UpdateAvatar(ctx context.Context, req *structpb.Stru
 	return resp, nil
 }
 
+func (s *UserServiceServer) SignInWithOAuth(ctx context.Context, req *structpb.Struct) (*structpb.Struct, error) {
+	user, accessToken, refreshToken, err := s.uc.LoginWithOAuth(domain.OAuthLoginInput{
+		Email:     stringsFromStruct(req, "email"),
+		Username:  stringsFromStruct(req, "username"),
+		AvatarURL: stringsFromStruct(req, "avatar_url"),
+	})
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	resp, err := structpb.NewStruct(map[string]interface{}{
+		"user_id":       user.ID,
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+		"user": map[string]interface{}{
+			"id":         user.ID,
+			"username":   user.Username,
+			"email":      user.Email,
+			"avatar_url": user.AvatarURL,
+			"role":       user.Role,
+			"created_at": user.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		},
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to encode oauth response")
+	}
+	return resp, nil
+}
+
 func stringsFromStruct(s *structpb.Struct, key string) string {
 	if s == nil || s.Fields == nil {
 		return ""
@@ -206,6 +236,24 @@ func _UserProfileService_UpdateAvatar_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserProfileService_SignInWithOAuth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(structpb.Struct)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserProfileServiceServer).SignInWithOAuth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user.v1.UserProfileService/SignInWithOAuth",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserProfileServiceServer).SignInWithOAuth(ctx, req.(*structpb.Struct))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var UserProfileService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "user.v1.UserProfileService",
 	HandlerType: (*UserProfileServiceServer)(nil),
@@ -213,6 +261,10 @@ var UserProfileService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateAvatar",
 			Handler:    _UserProfileService_UpdateAvatar_Handler,
+		},
+		{
+			MethodName: "SignInWithOAuth",
+			Handler:    _UserProfileService_SignInWithOAuth_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

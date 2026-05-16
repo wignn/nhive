@@ -1,11 +1,14 @@
 package handler
 
 import (
+	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html"
 	"io"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -25,14 +28,27 @@ import (
 )
 
 type Handlers struct {
-	Clients   *clients.Clients
-	JWTSecret []byte
-	R2Client  *storage.R2Client
-	R2BaseURL string
+	Clients         *clients.Clients
+	JWTSecret       []byte
+	R2Client        *storage.R2Client
+	R2BaseURL       string
+	GoogleClientIDs map[string]struct{}
 }
 
-func New(c *clients.Clients, jwtSecret string, r2 *storage.R2Client, r2BaseURL string) *Handlers {
-	return &Handlers{Clients: c, JWTSecret: []byte(jwtSecret), R2Client: r2, R2BaseURL: strings.TrimRight(r2BaseURL, "/")}
+func New(c *clients.Clients, jwtSecret string, r2 *storage.R2Client, r2BaseURL string, googleClientIDs []string) *Handlers {
+	allowedGoogleClientIDs := make(map[string]struct{}, len(googleClientIDs))
+	for _, id := range googleClientIDs {
+		if id = strings.TrimSpace(id); id != "" {
+			allowedGoogleClientIDs[id] = struct{}{}
+		}
+	}
+	return &Handlers{
+		Clients:         c,
+		JWTSecret:       []byte(jwtSecret),
+		R2Client:        r2,
+		R2BaseURL:       strings.TrimRight(r2BaseURL, "/"),
+		GoogleClientIDs: allowedGoogleClientIDs,
+	}
 }
 
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {
@@ -145,6 +161,33 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *Handlers) LoginWithGoogle(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		IDToken string `json:"id_token"`
+	}
+	if err := readJSON(r, &req); err != nil || strings.TrimSpace(req.IDToken) == "" {
+		writeError(w, 400, "id_token is required")
+		return
+	}
+	if len(h.GoogleClientIDs) == 0 {
+		writeError(w, 500, "Google OAuth is not configured")
+		return
+	}
+
+	claims, err := h.verifyGoogleIDToken(r.Context(), strings.TrimSpace(req.IDToken))
+	if err != nil {
+		writeError(w, 401, err.Error())
+		return
+	}
+
+	resp, err := h.Clients.SignInWithOAuth(r.Context(), claims.Email, claims.Name, claims.Picture)
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, 200, resp)
+}
+
 func (h *Handlers) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		RefreshToken string `json:"refresh_token"`
@@ -165,6 +208,79 @@ func (h *Handlers) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		"access_token":  resp.AccessToken,
 		"refresh_token": resp.RefreshToken,
 	})
+}
+
+type googleTokenClaims struct {
+	Audience      string `json:"aud"`
+	Subject       string `json:"sub"`
+	Email         string `json:"email"`
+	EmailVerified any    `json:"email_verified"`
+	Name          string `json:"name"`
+	Picture       string `json:"picture"`
+}
+
+func (h *Handlers) verifyGoogleIDToken(ctx context.Context, idToken string) (*googleTokenClaims, error) {
+	verifyURL := "https://oauth2.googleapis.com/tokeninfo?id_token=" + url.QueryEscape(idToken)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, verifyURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify Google token")
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify Google token")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("invalid Google token")
+	}
+
+	var claims googleTokenClaims
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&claims); err != nil {
+		return nil, fmt.Errorf("invalid Google token")
+	}
+	if _, ok := h.GoogleClientIDs[claims.Audience]; !ok {
+		return nil, fmt.Errorf("Google token audience is not allowed")
+	}
+	if claims.Subject == "" || strings.TrimSpace(claims.Email) == "" || !googleEmailVerified(claims.EmailVerified) {
+		return nil, fmt.Errorf("Google account email is not verified")
+	}
+
+	if payloadClaims := decodeGoogleIDTokenPayload(idToken); payloadClaims != nil {
+		if claims.Name == "" {
+			claims.Name = payloadClaims.Name
+		}
+		if claims.Picture == "" {
+			claims.Picture = payloadClaims.Picture
+		}
+	}
+	return &claims, nil
+}
+
+func googleEmailVerified(value any) bool {
+	switch v := value.(type) {
+	case bool:
+		return v
+	case string:
+		return strings.EqualFold(v, "true")
+	default:
+		return false
+	}
+}
+
+func decodeGoogleIDTokenPayload(idToken string) *googleTokenClaims {
+	parts := strings.Split(idToken, ".")
+	if len(parts) < 2 {
+		return nil
+	}
+	raw, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil
+	}
+	var claims googleTokenClaims
+	if err := json.Unmarshal(raw, &claims); err != nil {
+		return nil
+	}
+	return &claims
 }
 
 func (h *Handlers) GetProfile(w http.ResponseWriter, r *http.Request) {

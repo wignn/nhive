@@ -55,7 +55,7 @@ func main() {
 	)
 	defer svcClients.Close()
 
-	h := handler.New(svcClients, cfg.JWTSecret, r2Client, cfg.R2PublicURL)
+	h := handler.New(svcClients, cfg.JWTSecret, r2Client, cfg.R2PublicURL, cfg.GoogleClientIDs)
 
 	r := chi.NewRouter()
 
@@ -84,6 +84,7 @@ func main() {
 		r.Group(func(r chi.Router) {
 			r.Post("/auth/register", h.Register)
 			r.Post("/auth/login", h.Login)
+			r.Post("/auth/google", h.LoginWithGoogle)
 			r.Post("/auth/refresh", h.RefreshToken)
 
 			r.Get("/novels", h.ListNovels)

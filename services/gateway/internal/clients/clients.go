@@ -65,6 +65,23 @@ func (c *Clients) UpdateUserAvatar(ctx context.Context, userID, avatarURL string
 	return resp.AsMap(), nil
 }
 
+func (c *Clients) SignInWithOAuth(ctx context.Context, email, username, avatarURL string) (map[string]interface{}, error) {
+	req, err := structpb.NewStruct(map[string]interface{}{
+		"email":      email,
+		"username":   username,
+		"avatar_url": avatarURL,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	resp := new(structpb.Struct)
+	if err := c.UserConn.Invoke(ctx, "/user.v1.UserProfileService/SignInWithOAuth", req, resp); err != nil {
+		return nil, err
+	}
+	return resp.AsMap(), nil
+}
+
 func (c *Clients) Close() {
 	for _, conn := range c.conns {
 		conn.Close()

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
+import 'package:nhive/core/constants/api_constants.dart';
 import 'package:nhive/app/theme/app_theme.dart';
 import 'package:nhive/features/auth/presentation/bloc/auth_provider.dart';
 
@@ -14,6 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _googleInitialized = false;
 
   @override
   void dispose() {
@@ -41,6 +44,48 @@ class _LoginPageState extends State<LoginPage> {
     } else if (mounted && auth.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.error!), backgroundColor: Colors.redAccent),
+      );
+    }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    final auth = context.read<AuthProvider>();
+    try {
+      if (!_googleInitialized) {
+        await GoogleSignIn.instance.initialize(
+          serverClientId: ApiConstants.googleWebClientId.isEmpty
+              ? null
+              : ApiConstants.googleWebClientId,
+        );
+        _googleInitialized = true;
+      }
+
+      final account = await GoogleSignIn.instance.authenticate(
+        scopeHint: const ['email', 'profile'],
+      );
+      final idToken = account.authentication.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw Exception('Google did not return an ID token');
+      }
+
+      final success = await auth.loginWithGoogle(idToken);
+      if (success && mounted) {
+        Navigator.of(context).pop();
+      } else if (mounted && auth.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(auth.error!),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Colors.redAccent,
+        ),
       );
     }
   }
@@ -209,6 +254,55 @@ class _LoginPageState extends State<LoginPage> {
                                       'Sign In',
                                       style: TextStyle(fontSize: 16),
                                     ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: AppTheme.border.withOpacity(0.7),
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              'OR',
+                              style: TextStyle(
+                                color: AppTheme.muted,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: AppTheme.border.withOpacity(0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Consumer<AuthProvider>(
+                        builder: (context, auth, _) {
+                          return OutlinedButton.icon(
+                            onPressed: auth.status == AuthStatus.loading
+                                ? null
+                                : _handleGoogleLogin,
+                            icon: const Icon(Icons.g_mobiledata, size: 28),
+                            label: const Text('Continue with Google'),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(
+                                color: AppTheme.border.withOpacity(0.8),
+                              ),
+                              minimumSize: const Size.fromHeight(48),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              foregroundColor: AppTheme.foreground,
                             ),
                           );
                         },

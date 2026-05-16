@@ -3,6 +3,7 @@ package usecase
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"regexp"
 	"strings"
 	"time"
 
@@ -95,6 +96,85 @@ func (uc *UserUsecase) Login(input domain.LoginInput) (*domain.User, string, str
 	}
 
 	return user, accessToken, refreshToken, nil
+}
+
+func (uc *UserUsecase) LoginWithOAuth(input domain.OAuthLoginInput) (*domain.User, string, string, error) {
+	email := strings.ToLower(strings.TrimSpace(input.Email))
+	if email == "" {
+		return nil, "", "", domain.ErrInvalidInput
+	}
+
+	user, err := uc.repo.GetByEmail(email)
+	if err == nil {
+		if user.AvatarURL == "" && strings.TrimSpace(input.AvatarURL) != "" {
+			if updateErr := uc.repo.UpdateAvatarURL(user.ID, strings.TrimSpace(input.AvatarURL)); updateErr == nil {
+				user.AvatarURL = strings.TrimSpace(input.AvatarURL)
+			}
+		}
+		return uc.issueTokens(user)
+	}
+	if err != domain.ErrUserNotFound {
+		return nil, "", "", err
+	}
+
+	username := uc.uniqueOAuthUsername(input.Username, email)
+	user = &domain.User{
+		ID:           generateID(),
+		Username:     username,
+		Email:        email,
+		PasswordHash: "",
+		AvatarURL:    strings.TrimSpace(input.AvatarURL),
+		Role:         "reader",
+		CreatedAt:    time.Now(),
+	}
+	if err := uc.repo.Create(user); err != nil {
+		return nil, "", "", err
+	}
+	return uc.issueTokens(user)
+}
+
+func (uc *UserUsecase) issueTokens(user *domain.User) (*domain.User, string, string, error) {
+	accessToken, err := uc.generateAccessToken(user)
+	if err != nil {
+		return nil, "", "", err
+	}
+	refreshToken, err := uc.generateRefreshToken(user)
+	if err != nil {
+		return nil, "", "", err
+	}
+	return user, accessToken, refreshToken, nil
+}
+
+func (uc *UserUsecase) uniqueOAuthUsername(name, email string) string {
+	base := sanitizeUsername(name)
+	if base == "" {
+		base = sanitizeUsername(strings.Split(email, "@")[0])
+	}
+	if len(base) < 3 {
+		base = "user" + base
+	}
+	if exists, _ := uc.repo.ExistsByUsername(base); !exists {
+		return base
+	}
+
+	for i := 0; i < 8; i++ {
+		candidate := base + hexSuffix(3)
+		if exists, _ := uc.repo.ExistsByUsername(candidate); !exists {
+			return candidate
+		}
+	}
+	return base + hexSuffix(6)
+}
+
+func sanitizeUsername(value string) string {
+	value = strings.ToLower(strings.TrimSpace(value))
+	re := regexp.MustCompile(`[^a-z0-9_]+`)
+	value = re.ReplaceAllString(value, "_")
+	value = strings.Trim(value, "_")
+	if len(value) > 40 {
+		value = value[:40]
+	}
+	return value
 }
 
 func (uc *UserUsecase) RefreshToken(refreshTokenStr string) (string, string, error) {
@@ -219,6 +299,12 @@ func (uc *UserUsecase) generateRefreshToken(user *domain.User) (string, error) {
 
 func generateID() string {
 	b := make([]byte, 16)
+	rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
+func hexSuffix(bytesLen int) string {
+	b := make([]byte, bytesLen)
 	rand.Read(b)
 	return hex.EncodeToString(b)
 }

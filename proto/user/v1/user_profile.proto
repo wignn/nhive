@@ -8,4 +8,5 @@ import "google/protobuf/struct.proto";
 
 service UserProfileService {
   rpc UpdateAvatar(google.protobuf.Struct) returns (google.protobuf.Struct);
+  rpc SignInWithOAuth(google.protobuf.Struct) returns (google.protobuf.Struct);
 }
