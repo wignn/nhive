@@ -157,6 +157,16 @@ func (uc *UserUsecase) UpdateUserRole(userID, role string) error {
 	return uc.repo.UpdateRole(userID, role)
 }
 
+func (uc *UserUsecase) UpdateAvatarURL(userID, avatarURL string) (*domain.User, error) {
+	if strings.TrimSpace(userID) == "" || strings.TrimSpace(avatarURL) == "" {
+		return nil, domain.ErrInvalidInput
+	}
+	if err := uc.repo.UpdateAvatarURL(userID, strings.TrimSpace(avatarURL)); err != nil {
+		return nil, err
+	}
+	return uc.repo.GetByID(userID)
+}
+
 func (uc *UserUsecase) ValidateToken(tokenStr string) (string, string, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

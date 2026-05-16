@@ -32,4 +32,5 @@ type UserRepository interface {
 	ExistsByUsername(username string) (bool, error)
 	ListAll(page, pageSize int) ([]*User, int, error)
 	UpdateRole(id, role string) error
+	UpdateAvatarURL(id, avatarURL string) error
 }

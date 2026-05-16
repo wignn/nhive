@@ -9,14 +9,14 @@ import (
 	"syscall"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/novelhive/user-service/internal/config"
-	grpcserver "github.com/novelhive/user-service/internal/grpc"
-	"github.com/novelhive/user-service/internal/repository"
-	"github.com/novelhive/user-service/internal/usecase"
 	"github.com/novelhive/pkg/grpcauth"
 	"github.com/novelhive/pkg/grpclog"
 	"github.com/novelhive/pkg/logger"
 	userv1 "github.com/novelhive/proto/user/v1"
+	"github.com/novelhive/user-service/internal/config"
+	grpcserver "github.com/novelhive/user-service/internal/grpc"
+	"github.com/novelhive/user-service/internal/repository"
+	"github.com/novelhive/user-service/internal/usecase"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -54,7 +54,9 @@ func main() {
 			grpcauth.UnaryServerInterceptor(cfg.InternalAPIKey),
 		),
 	)
-	userv1.RegisterUserServiceServer(grpcSrv, grpcserver.NewUserServiceServer(userUC))
+	userServer := grpcserver.NewUserServiceServer(userUC)
+	userv1.RegisterUserServiceServer(grpcSrv, userServer)
+	grpcserver.RegisterUserProfileServiceServer(grpcSrv, userServer)
 	reflection.Register(grpcSrv)
 
 	log.Info("user-service started", zap.String("port", cfg.GRPCPort))

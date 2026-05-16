@@ -1,24 +1,27 @@
 package clients
 
 import (
+	"context"
 	"log"
 
+	"github.com/novelhive/pkg/grpcauth"
 	commentv1 "github.com/novelhive/proto/comment/v1"
 	libraryv1 "github.com/novelhive/proto/library/v1"
-	novelv1 "github.com/novelhive/proto/novel/v1"
 	notificationv1 "github.com/novelhive/proto/notification/v1"
+	novelv1 "github.com/novelhive/proto/novel/v1"
 	userv1 "github.com/novelhive/proto/user/v1"
-	"github.com/novelhive/pkg/grpcauth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type Clients struct {
-	Novel   novelv1.NovelServiceClient
-	User    userv1.UserServiceClient
-	Comment commentv1.CommentServiceClient
-	Library libraryv1.LibraryServiceClient
+	Novel        novelv1.NovelServiceClient
+	User         userv1.UserServiceClient
+	Comment      commentv1.CommentServiceClient
+	Library      libraryv1.LibraryServiceClient
 	Notification notificationv1.NotificationServiceClient
+	UserConn     *grpc.ClientConn
 
 	conns []*grpc.ClientConn
 }
@@ -41,8 +44,25 @@ func New(userAddr, novelAddr, commentAddr, libraryAddr, notificationAddr, apiKey
 		Comment:      commentv1.NewCommentServiceClient(commentConn),
 		Library:      libraryv1.NewLibraryServiceClient(libraryConn),
 		Notification: notificationv1.NewNotificationServiceClient(notificationConn),
+		UserConn:     userConn,
 		conns:        []*grpc.ClientConn{userConn, novelConn, commentConn, libraryConn, notificationConn},
 	}
+}
+
+func (c *Clients) UpdateUserAvatar(ctx context.Context, userID, avatarURL string) (map[string]interface{}, error) {
+	req, err := structpb.NewStruct(map[string]interface{}{
+		"user_id":    userID,
+		"avatar_url": avatarURL,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	resp := new(structpb.Struct)
+	if err := c.UserConn.Invoke(ctx, "/user.v1.UserProfileService/UpdateAvatar", req, resp); err != nil {
+		return nil, err
+	}
+	return resp.AsMap(), nil
 }
 
 func (c *Clients) Close() {

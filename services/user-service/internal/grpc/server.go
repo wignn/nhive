@@ -3,16 +3,22 @@ package grpcserver
 import (
 	"context"
 
+	userv1 "github.com/novelhive/proto/user/v1"
 	"github.com/novelhive/user-service/internal/domain"
 	"github.com/novelhive/user-service/internal/usecase"
-	userv1 "github.com/novelhive/proto/user/v1"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type UserServiceServer struct {
 	userv1.UnimplementedUserServiceServer
 	uc *usecase.UserUsecase
+}
+
+type UserProfileServiceServer interface {
+	UpdateAvatar(context.Context, *structpb.Struct) (*structpb.Struct, error)
 }
 
 func NewUserServiceServer(uc *usecase.UserUsecase) *UserServiceServer {
@@ -140,6 +146,77 @@ func (s *UserServiceServer) UpdateUserRole(ctx context.Context, req *userv1.Upda
 		return nil, mapDomainError(err)
 	}
 	return &userv1.UpdateUserRoleResponse{Success: true}, nil
+}
+
+func (s *UserServiceServer) UpdateAvatar(ctx context.Context, req *structpb.Struct) (*structpb.Struct, error) {
+	userID := stringsFromStruct(req, "user_id")
+	avatarURL := stringsFromStruct(req, "avatar_url")
+	if userID == "" || avatarURL == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id and avatar_url are required")
+	}
+
+	user, err := s.uc.UpdateAvatarURL(userID, avatarURL)
+	if err != nil {
+		return nil, mapDomainError(err)
+	}
+
+	resp, err := structpb.NewStruct(map[string]interface{}{
+		"id":         user.ID,
+		"username":   user.Username,
+		"email":      user.Email,
+		"avatar_url": user.AvatarURL,
+		"role":       user.Role,
+		"created_at": user.CreatedAt.Format("2006-01-02T15:04:05Z"),
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to encode profile")
+	}
+	return resp, nil
+}
+
+func stringsFromStruct(s *structpb.Struct, key string) string {
+	if s == nil || s.Fields == nil {
+		return ""
+	}
+	if value := s.Fields[key]; value != nil {
+		return value.GetStringValue()
+	}
+	return ""
+}
+
+func RegisterUserProfileServiceServer(s grpc.ServiceRegistrar, srv UserProfileServiceServer) {
+	s.RegisterService(&UserProfileService_ServiceDesc, srv)
+}
+
+func _UserProfileService_UpdateAvatar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(structpb.Struct)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserProfileServiceServer).UpdateAvatar(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user.v1.UserProfileService/UpdateAvatar",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserProfileServiceServer).UpdateAvatar(ctx, req.(*structpb.Struct))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var UserProfileService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "user.v1.UserProfileService",
+	HandlerType: (*UserProfileServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "UpdateAvatar",
+			Handler:    _UserProfileService_UpdateAvatar_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "proto/user/v1/user_profile.proto",
 }
 
 func mapDomainError(err error) error {

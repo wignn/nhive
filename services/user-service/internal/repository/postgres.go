@@ -118,3 +118,16 @@ func (r *PostgresUserRepo) UpdateRole(id, role string) error {
 	}
 	return nil
 }
+
+func (r *PostgresUserRepo) UpdateAvatarURL(id, avatarURL string) error {
+	tag, err := r.pool.Exec(context.Background(),
+		"UPDATE users SET avatar_url = $1 WHERE id = $2", avatarURL, id,
+	)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return domain.ErrUserNotFound
+	}
+	return nil
+}

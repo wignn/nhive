@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
+	"io"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -176,6 +177,94 @@ func (h *Handlers) GetProfile(w http.ResponseWriter, r *http.Request) {
 		"role":       resp.Role,
 		"avatar_url": resp.AvatarUrl,
 	})
+}
+
+func (h *Handlers) UploadProfileAvatar(w http.ResponseWriter, r *http.Request) {
+	if h.R2Client == nil {
+		writeError(w, 500, "R2 storage not configured")
+		return
+	}
+
+	const maxAvatarSize = 5 << 20
+	r.Body = http.MaxBytesReader(w, r.Body, maxAvatarSize+1024)
+	if err := r.ParseMultipartForm(maxAvatarSize); err != nil {
+		writeError(w, 400, "invalid multipart upload")
+		return
+	}
+
+	file, fileHeader, err := r.FormFile("image")
+	if err != nil {
+		file, fileHeader, err = r.FormFile("avatar")
+	}
+	if err != nil {
+		writeError(w, 400, "image file is required")
+		return
+	}
+	defer file.Close()
+
+	if fileHeader.Size <= 0 || fileHeader.Size > maxAvatarSize {
+		writeError(w, 400, "image must be 5MB or smaller")
+		return
+	}
+
+	contentType, ext, err := detectImage(file, fileHeader.Filename)
+	if err != nil {
+		writeError(w, 400, err.Error())
+		return
+	}
+
+	uid := middleware.GetUserID(r.Context())
+	filename := fmt.Sprintf("avatars/%s/%d%s", uid, time.Now().UnixNano(), ext)
+	path, baseURL, err := h.R2Client.UploadImage(r.Context(), file, filename, contentType)
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
+	}
+
+	avatarURL := strings.TrimRight(baseURL, "/") + "/" + strings.TrimLeft(path, "/")
+	user, err := h.Clients.UpdateUserAvatar(r.Context(), uid, avatarURL)
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
+	}
+
+	writeJSON(w, 200, map[string]interface{}{
+		"avatar_url": avatarURL,
+		"user":       user,
+	})
+}
+
+func detectImage(file interface {
+	io.Reader
+	io.Seeker
+}, filename string) (string, string, error) {
+	head := make([]byte, 512)
+	n, err := file.Read(head)
+	if err != nil && err != io.EOF {
+		return "", "", fmt.Errorf("failed to read image")
+	}
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		return "", "", fmt.Errorf("failed to read image")
+	}
+
+	contentType := http.DetectContentType(head[:n])
+	ext := strings.ToLower(filepath.Ext(filename))
+	switch contentType {
+	case "image/jpeg":
+		if ext != ".jpg" && ext != ".jpeg" {
+			ext = ".jpg"
+		}
+	case "image/png":
+		ext = ".png"
+	case "image/webp":
+		ext = ".webp"
+	case "image/gif":
+		ext = ".gif"
+	default:
+		return "", "", fmt.Errorf("only JPEG, PNG, WebP, or GIF images are allowed")
+	}
+
+	return contentType, ext, nil
 }
 
 func (h *Handlers) ListNovels(w http.ResponseWriter, r *http.Request) {

@@ -1,4 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:nhive/app/theme/app_theme.dart';
 import 'package:nhive/features/auth/presentation/bloc/auth_provider.dart';
@@ -91,32 +93,83 @@ class ProfilePage extends StatelessWidget {
             children: [
               const SizedBox(height: 24),
               // Avatar
-              Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  gradient: AppTheme.brandGradient,
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primary.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
+              GestureDetector(
+                onTap: auth.isUploadingAvatar
+                    ? null
+                    : () => _pickAndUploadAvatar(context, auth),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.brandGradient,
+                        borderRadius: BorderRadius.circular(22),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primary.withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(22),
+                        child: user.avatarUrl.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: user.avatarUrl,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    _buildAvatarInitial(user.username),
+                              )
+                            : _buildAvatarInitial(user.username),
+                      ),
+                    ),
+                    Positioned(
+                      right: -4,
+                      bottom: -4,
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.background,
+                            width: 3,
+                          ),
+                        ),
+                        child: auth.isUploadingAvatar
+                            ? const Padding(
+                                padding: EdgeInsets.all(8),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.camera_alt,
+                                size: 17,
+                                color: Colors.white,
+                              ),
+                      ),
                     ),
                   ],
                 ),
-                child: Center(
-                  child: Text(
-                    user.username.isNotEmpty
-                        ? user.username[0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton.icon(
+                onPressed: auth.isUploadingAvatar
+                    ? null
+                    : () => _pickAndUploadAvatar(context, auth),
+                icon: const Icon(Icons.photo_library_outlined, size: 18),
+                label: const Text('Change photo'),
               ),
               const SizedBox(height: 16),
               Text(
@@ -226,6 +279,44 @@ class ProfilePage extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarInitial(String username) {
+    return Center(
+      child: Text(
+        username.isNotEmpty ? username[0].toUpperCase() : '?',
+        style: const TextStyle(
+          fontSize: 36,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndUploadAvatar(
+    BuildContext context,
+    AuthProvider auth,
+  ) async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      maxHeight: 1200,
+      imageQuality: 88,
+    );
+    if (image == null) return;
+
+    final ok = await auth.uploadAvatar(image.path);
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ok ? 'Profile photo updated' : auth.error ?? 'Upload failed',
         ),
       ),
     );

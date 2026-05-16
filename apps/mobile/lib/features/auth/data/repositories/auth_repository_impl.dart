@@ -42,4 +42,14 @@ class AuthRepositoryImpl implements AuthRepository {
     final user = UserModel.fromJson(data);
     return user;
   }
+
+  @override
+  Future<User> uploadAvatar(String filePath) async {
+    final data = await remoteDataSource.uploadAvatar(filePath);
+    final userJson = data['user'];
+    if (userJson is Map<String, dynamic>) {
+      return UserModel.fromJson(userJson);
+    }
+    return await getMe();
+  }
 }

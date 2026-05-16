@@ -64,7 +64,11 @@ func (r *R2Client) UploadImage(ctx context.Context, file multipart.File, filenam
 	if baseURL == "" {
 		// Fallback: This URL requires AWS SigV4 auth and won't work in a browser directly.
 		// The user MUST configure Public Access in Cloudflare and set R2_PUBLIC_URL.
-		baseURL = fmt.Sprintf("%s/%s", r.Config.R2Endpoint, r.Config.R2BucketName)
+		endpointURL := r.Config.R2Endpoint
+		if endpointURL == "" {
+			endpointURL = fmt.Sprintf("https://%s.r2.cloudflarestorage.com", r.Config.R2AccountID)
+		}
+		baseURL = fmt.Sprintf("%s/%s", endpointURL, r.Config.R2BucketName)
 	}
 
 	return filename, baseURL, nil

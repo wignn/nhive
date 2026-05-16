@@ -101,6 +101,7 @@ func main() {
 			r.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 
 			r.Get("/auth/me", h.GetProfile)
+			r.Post("/auth/avatar", h.UploadProfileAvatar)
 
 			r.Post("/chapters/{chapterId}/comments", h.CreateComment)
 			r.Post("/comments/{commentId}/like", h.LikeComment)
