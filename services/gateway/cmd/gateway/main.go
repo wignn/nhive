@@ -55,7 +55,7 @@ func main() {
 	)
 	defer svcClients.Close()
 
-	h := handler.New(svcClients, cfg.JWTSecret, r2Client)
+	h := handler.New(svcClients, cfg.JWTSecret, r2Client, cfg.R2PublicURL)
 
 	r := chi.NewRouter()
 

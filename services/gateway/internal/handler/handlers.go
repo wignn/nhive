@@ -28,10 +28,11 @@ type Handlers struct {
 	Clients   *clients.Clients
 	JWTSecret []byte
 	R2Client  *storage.R2Client
+	R2BaseURL string
 }
 
-func New(c *clients.Clients, jwtSecret string, r2 *storage.R2Client) *Handlers {
-	return &Handlers{Clients: c, JWTSecret: []byte(jwtSecret), R2Client: r2}
+func New(c *clients.Clients, jwtSecret string, r2 *storage.R2Client, r2BaseURL string) *Handlers {
+	return &Handlers{Clients: c, JWTSecret: []byte(jwtSecret), R2Client: r2, R2BaseURL: strings.TrimRight(r2BaseURL, "/")}
 }
 
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {
@@ -54,6 +55,9 @@ func sanitize(s string) string {
 }
 
 func (h *Handlers) r2BaseURL() string {
+	if h.R2BaseURL != "" {
+		return h.R2BaseURL
+	}
 	if h.R2Client == nil {
 		return ""
 	}

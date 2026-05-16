@@ -33,12 +33,14 @@ class NovelModel extends Novel {
     }
 
     String? coverUrl = json['cover_url'];
-    if (coverUrl != null &&
-        coverBaseUrl != null &&
-        !coverUrl.startsWith('http')) {
-      final base = coverBaseUrl.endsWith('/')
-          ? coverBaseUrl.substring(0, coverBaseUrl.length - 1)
-          : coverBaseUrl;
+    if (coverUrl != null && !coverUrl.startsWith('http')) {
+      const defaultCoverBaseUrl = 'https://cdn.wign.dev';
+      final rawBase = (coverBaseUrl != null && coverBaseUrl.isNotEmpty)
+          ? coverBaseUrl
+          : defaultCoverBaseUrl;
+      final base = rawBase.endsWith('/')
+          ? rawBase.substring(0, rawBase.length - 1)
+          : rawBase;
       final path = coverUrl.startsWith('/') ? coverUrl : '/$coverUrl';
       coverUrl = '$base$path';
     }
